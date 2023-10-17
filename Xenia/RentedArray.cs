@@ -12,9 +12,6 @@ namespace Byrone.Xenia
 
 		private readonly ArrayPool<T> pool;
 
-		public System.Memory<T> Memory =>
-			new(this.Data, 0, this.Size);
-
 		public T this[int index]
 		{
 			get => this.Data[index];

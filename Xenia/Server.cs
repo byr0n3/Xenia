@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Byrone.Xenia.Extensions;
@@ -9,9 +10,10 @@ namespace Byrone.Xenia
 	public sealed class Server : System.IDisposable
 	{
 		private const int bufferSize = 512;
-		
+
 		private readonly TcpListener listener;
 		private readonly ServerOptions options;
+		private readonly List<RequestHandler> handlers; // @todo No list
 		private readonly CancellationToken cancelToken;
 
 		private IServerLogger Logger =>
@@ -26,6 +28,7 @@ namespace Byrone.Xenia
 
 			this.options = options;
 			this.cancelToken = token;
+			this.handlers = new List<RequestHandler>();
 			this.listener = new TcpListener(ip, options.Port);
 
 			this.listener.Start();
@@ -33,15 +36,21 @@ namespace Byrone.Xenia
 			this.Logger.LogInfo($"Server started on http://{options.IpAddress}:{options.Port}");
 		}
 
+		public void RegisterHandler(RequestHandler handler) =>
+			this.handlers.Add(handler);
+
+		public bool UnregisterHandler(RequestHandler handler) =>
+			this.handlers.Remove(handler);
+
 		public void Listen()
 		{
 			while (!this.cancelToken.IsCancellationRequested)
 			{
-				this.HandleRequest();
+				this.HandleConnection();
 			}
 		}
 
-		private void HandleRequest()
+		private void HandleConnection()
 		{
 			var client = this.listener.AcceptTcpClient();
 			var stream = client.GetStream();
@@ -53,39 +62,66 @@ namespace Byrone.Xenia
 				return;
 			}
 
-			using (var buffer = new RentedArray<byte>(Server.bufferSize))
-			{
-				var read = stream.Read(buffer.AsSpan());
-				
-				// @todo Handle not everything read
+			System.Span<byte> buffer = stackalloc byte[Server.bufferSize];
 
-				if (read == 0)
+			var read = stream.Read(buffer);
+
+			var bytes = buffer.Slice(0, read);
+
+			using (var ranges = new RentedArray<System.Range>(15)) // @todo
+			{
+				var count = bytes.Split(ranges.Data, (byte)'\n');
+
+				if (count == 0 || !ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
 				{
-					this.Logger.LogWarning("No data read");
+					this.Logger.LogWarning("Unable to parse request");
 
 					return;
 				}
 
-				var bytes = buffer.AsSpan(0, read);
-
-				using (var ranges = new RentedArray<System.Range>(15)) // @todo
+				using (var writer = new ResponseWriter(ref stream))
 				{
-					var count = bytes.Split(ranges.Data, (byte)'\n');
+					var result = this.TryHandleRequest(writer, in request);
 
-					if (count == 0 || !ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
+					switch (result)
 					{
-						this.Logger.LogWarning("Unable to parse request");
+						case HandleRequestResult.MethodNotAllowed:
+							writer.WriteMethodNotAllowed(in request);
+							break;
 
-						return;
+						case HandleRequestResult.NotAllowed:
+							writer.WriteNotFound(in request);
+							break;
 					}
-
-					// @todo Request handlers
-
-					// @todo Handle not found/method not allowed
-
-					request.Dispose();
 				}
+
+				stream.Flush();
+
+				request.Dispose();
 			}
+
+			client.Close();
+		}
+
+		private HandleRequestResult TryHandleRequest(ResponseWriter writer, in Request request)
+		{
+			foreach (var handler in this.handlers)
+			{
+				if (handler.Path != request.Path)
+				{
+					continue;
+				}
+
+				if (handler.Method != request.Method)
+				{
+					return HandleRequestResult.MethodNotAllowed;
+				}
+
+				handler.Handler(writer, in request);
+				return HandleRequestResult.Success;
+			}
+
+			return HandleRequestResult.NotAllowed;
 		}
 
 		public void Dispose()
@@ -93,6 +129,13 @@ namespace Byrone.Xenia
 			this.Logger.LogInfo("Closing server...");
 
 			this.listener.Dispose();
+		}
+
+		private enum HandleRequestResult
+		{
+			NotAllowed = 0,
+			MethodNotAllowed,
+			Success,
 		}
 	}
 }

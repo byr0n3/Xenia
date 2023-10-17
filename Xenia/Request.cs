@@ -9,11 +9,11 @@ namespace Byrone.Xenia
 	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
 	[DebuggerTypeProxy(typeof(Request.DebugView))]
-	public readonly ref struct Request
+	public readonly struct Request
 	{
 		public required HttpMethod Method { get; init; }
 
-		public required System.ReadOnlySpan<byte> Path { get; init; }
+		public required SpanPointer<byte> Path { get; init; }
 
 		public required RentedArray<RequestHeader> HeaderData { get; init; }
 
@@ -22,10 +22,8 @@ namespace Byrone.Xenia
 		public System.ReadOnlySpan<RequestHeader> Headers =>
 			this.HeaderData.AsSpan(0, this.HeaderCount);
 
-		public void Dispose()
-		{
+		public void Dispose() =>
 			this.HeaderData.Dispose();
-		}
 
 		private sealed class DebugView
 		{
@@ -38,14 +36,16 @@ namespace Byrone.Xenia
 			public DebugView(Request request)
 			{
 				this.Method = request.Method;
-				this.Path = DebugView.encoding.GetString(request.Path);
+				this.Path = DebugView.encoding.GetString(request.Path.AsSpan);
 
 				this.Headers = new Dictionary<string, string>(request.HeaderCount, System.StringComparer.Ordinal);
 
 				foreach (var header in request.Headers)
 				{
-					this.Headers.Add(DebugView.encoding.GetString(header.Key),
-									 DebugView.encoding.GetString(header.Value));
+					var key = DebugView.encoding.GetString(header.Key);
+					var value = DebugView.encoding.GetString(header.Value);
+
+					this.Headers.Add(key, value);
 				}
 			}
 		}

@@ -6,4 +6,8 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\Byrone.Utilities\Byrone.Utilities.csproj" />
+	</ItemGroup>
+
 </Project>

@@ -32,6 +32,7 @@ namespace Byrone.Xenia.Helpers
 
 			var path = new System.Range(methodIdx + 1, pathIdx);
 
+			// skip the first row
 			var headers = new RentedArray<RequestHeader>(ranges.Length - 1);
 			var headerCount = 0;
 
@@ -39,6 +40,7 @@ namespace Byrone.Xenia.Helpers
 			{
 				var range = ranges[i];
 
+				// without the \r character
 				var slice = bytes.Slice(range.Start.Value, range.End.Value - 1);
 				var separatorIdx = System.MemoryExtensions.IndexOf(slice, semiColon);
 
@@ -52,6 +54,8 @@ namespace Byrone.Xenia.Helpers
 
 				headers[headerCount++] = new RequestHeader(key, value);
 			}
+
+			// @todo Parse request body (form data/json body)
 
 			request = new Request
 			{
