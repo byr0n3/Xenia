@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<AssemblyName>Byrone.Xenia.Example</AssemblyName>
+		<RootNamespace>Byrone.Xenia.Example</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Xenia\Xenia.csproj" />
+	</ItemGroup>
+
+</Project>
