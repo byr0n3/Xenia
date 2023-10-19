@@ -36,7 +36,7 @@ namespace Byrone.Xenia
 
 			if (size <= 0 || size > this.Size)
 			{
-				size = this.Size;
+				size = this.Size - start;
 			}
 
 			return System.MemoryExtensions.AsSpan(this.Data, start, size);

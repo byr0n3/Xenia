@@ -6,21 +6,21 @@ namespace Byrone.Xenia
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct RequestHandler : System.IEquatable<RequestHandler>
 	{
-		public delegate void Callback(ResponseWriter writer, in Request request);
+		public delegate void RequestHandlerCallback(in Request request, ref ResponseBuilder response);
 
 		public required HttpMethod Method { get; init; }
 
 		public required SpanPointer<byte> Path { get; init; }
 
-		public required Callback Handler { get; init; }
+		public required RequestHandlerCallback Handler { get; init; }
 
 		[SetsRequiredMembers]
-		public RequestHandler(System.ReadOnlySpan<byte> path, Callback handler) : this(HttpMethod.Get, path, handler)
+		public RequestHandler(System.ReadOnlySpan<byte> path, RequestHandlerCallback handler) : this(HttpMethod.Get, path, handler)
 		{
 		}
 
 		[SetsRequiredMembers]
-		public RequestHandler(HttpMethod method, System.ReadOnlySpan<byte> path, Callback handler)
+		public RequestHandler(HttpMethod method, System.ReadOnlySpan<byte> path, RequestHandlerCallback handler)
 		{
 			this.Method = method;
 			this.Path = path;

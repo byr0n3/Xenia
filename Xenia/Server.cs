@@ -68,42 +68,35 @@ namespace Byrone.Xenia
 
 			var bytes = buffer.Slice(0, read);
 
-			using (var ranges = new RentedArray<System.Range>(15)) // @todo
+			var ranges = new RentedArray<System.Range>(15); // @todo
+
+			var count = bytes.Split(ranges.Data, (byte)'\n');
+
+			if (count == 0 || !ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
 			{
-				var count = bytes.Split(ranges.Data, (byte)'\n');
+				this.Logger.LogWarning("Unable to parse request");
 
-				if (count == 0 || !ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
-				{
-					this.Logger.LogWarning("Unable to parse request");
-
-					return;
-				}
-
-				using (var writer = new ResponseWriter(ref stream))
-				{
-					var result = this.TryHandleRequest(writer, in request);
-
-					switch (result)
-					{
-						case HandleRequestResult.MethodNotAllowed:
-							writer.WriteMethodNotAllowed(in request);
-							break;
-
-						case HandleRequestResult.NotAllowed:
-							writer.WriteNotFound(in request);
-							break;
-					}
-				}
-
-				stream.Flush();
-
-				request.Dispose();
+				return;
 			}
 
-			client.Close();
+			var response = new ResponseBuilder();
+
+			var handler = this.TryHandleRequest(in request);
+
+			handler.Invoke(in request, ref response);
+
+			stream.Write(response.Span);
+
+			response.Dispose();
+
+			request.Dispose();
+
+			ranges.Dispose();
+
+			client.Dispose();
 		}
 
-		private HandleRequestResult TryHandleRequest(ResponseWriter writer, in Request request)
+		private RequestHandler.RequestHandlerCallback TryHandleRequest(in Request request)
 		{
 			foreach (var handler in this.handlers)
 			{
@@ -114,28 +107,32 @@ namespace Byrone.Xenia
 
 				if (handler.Method != request.Method)
 				{
-					return HandleRequestResult.MethodNotAllowed;
+					return Server.MethodNotAllowedHandler;
 				}
 
-				handler.Handler(writer, in request);
-				return HandleRequestResult.Success;
+				return handler.Handler;
 			}
 
-			return HandleRequestResult.NotAllowed;
+			return Server.NotFoundHandler;
 		}
+
+		private static void MethodNotAllowedHandler(in Request request, ref ResponseBuilder response) =>
+			response.AppendHtml(in request,
+								StatusCodes.Status405MethodNotAllowed,
+								// @todo Customizable
+								"<html><body><h1>405 Method Not Allowed</h1></html></body>"u8);
+
+		private static void NotFoundHandler(in Request request, ref ResponseBuilder response) =>
+			response.AppendHtml(in request,
+								StatusCodes.Status404NotFound,
+								// @todo Customizable
+								"<html><body><h1>404 Not Found</h1></html></body>"u8);
 
 		public void Dispose()
 		{
 			this.Logger.LogInfo("Closing server...");
 
 			this.listener.Dispose();
-		}
-
-		private enum HandleRequestResult
-		{
-			NotAllowed = 0,
-			MethodNotAllowed,
-			Success,
 		}
 	}
 }

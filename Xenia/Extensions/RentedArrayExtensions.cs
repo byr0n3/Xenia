@@ -1,5 +1,8 @@
+using JetBrains.Annotations;
+
 namespace Byrone.Xenia.Extensions
 {
+	[PublicAPI]
 	public static class RentedArrayExtensions
 	{
 		public static bool TryGetHeader(this RentedArray<RequestHeader> headers,

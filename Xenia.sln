@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xenia", "Xenia\Xenia.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xenia.Example", "Xenia.Example\Xenia.Example.csproj", "{3920A85A-9E62-41D7-9CBA-26B2447346A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Byrone.Utilities", "Byrone.Utilities\Byrone.Utilities.csproj", "{F074B543-DD09-4EF7-8F74-EA51D6829420}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,9 +27,5 @@ Global
 		{3920A85A-9E62-41D7-9CBA-26B2447346A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3920A85A-9E62-41D7-9CBA-26B2447346A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3920A85A-9E62-41D7-9CBA-26B2447346A3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F074B543-DD09-4EF7-8F74-EA51D6829420}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F074B543-DD09-4EF7-8F74-EA51D6829420}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F074B543-DD09-4EF7-8F74-EA51D6829420}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F074B543-DD09-4EF7-8F74-EA51D6829420}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
-namespace Byrone.Xenia.Helpers
+namespace Byrone.Xenia
 {
 	[PublicAPI]
 	[SuppressMessage("ReSharper", "InconsistentNaming")]
