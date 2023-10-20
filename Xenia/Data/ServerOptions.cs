@@ -7,10 +7,10 @@ namespace Byrone.Xenia.Data
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct ServerOptions
 	{
-		public string IpAddress { get; init; }
+		public required string IpAddress { get; init; }
 
-		public int Port { get; init; }
+		public required int Port { get; init; }
 
-		public IServerLogger Logger { get; init; }
+		public IServerLogger? Logger { get; init; }
 	}
 }

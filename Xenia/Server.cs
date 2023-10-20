@@ -16,11 +16,12 @@ namespace Byrone.Xenia
 		private readonly ServerOptions options;
 		private readonly List<RequestHandler> handlers; // @todo No list
 		private readonly CancellationToken cancelToken;
+		private readonly CancellationTokenRegistration cancelRegistration;
 
-		private IServerLogger Logger =>
+		private IServerLogger? Logger =>
 			this.options.Logger;
 
-		public Server(ServerOptions options, CancellationToken token)
+		public Server(ServerOptions options, CancellationToken token = default)
 		{
 			if (!IPAddress.TryParse(options.IpAddress, out var ip))
 			{
@@ -32,9 +33,11 @@ namespace Byrone.Xenia
 			this.handlers = new List<RequestHandler>();
 			this.listener = new TcpListener(ip, options.Port);
 
+			this.cancelRegistration = this.cancelToken.Register(this.Dispose);
+
 			this.listener.Start();
 
-			this.Logger.LogInfo($"Server started on http://{options.IpAddress}:{options.Port}");
+			this.Logger?.LogInfo($"Server started on http://{options.IpAddress}:{options.Port}");
 		}
 
 		public void AddRequestHandler(in RequestHandler handler)
@@ -61,48 +64,55 @@ namespace Byrone.Xenia
 
 		private void HandleConnection()
 		{
-			var client = this.listener.AcceptTcpClient();
-			var stream = client.GetStream();
-
-			if (!stream.CanRead)
+			try
 			{
-				this.Logger.LogWarning("Received an unreadable stream");
+				var client = this.listener.AcceptTcpClient();
+				var stream = client.GetStream();
 
-				return;
+				if (!stream.CanRead)
+				{
+					this.Logger?.LogWarning("Received an unreadable stream");
+
+					return;
+				}
+
+				System.Span<byte> buffer = stackalloc byte[Server.bufferSize];
+
+				var read = stream.Read(buffer);
+
+				var bytes = buffer.Slice(0, read);
+
+				var ranges = new RentedArray<System.Range>(15); // @todo
+
+				var count = bytes.Split(ranges.Data, (byte)'\n');
+
+				if (count == 0 || !ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
+				{
+					this.Logger?.LogWarning("Unable to parse request");
+
+					return;
+				}
+
+				var response = new ResponseBuilder();
+
+				var handler = this.TryHandleRequest(in request);
+
+				handler.Invoke(in request, ref response);
+
+				stream.Write(response.Span);
+
+				response.Dispose();
+
+				request.Dispose();
+
+				ranges.Dispose();
+
+				client.Dispose();
 			}
-
-			System.Span<byte> buffer = stackalloc byte[Server.bufferSize];
-
-			var read = stream.Read(buffer);
-
-			var bytes = buffer.Slice(0, read);
-
-			var ranges = new RentedArray<System.Range>(15); // @todo
-
-			var count = bytes.Split(ranges.Data, (byte)'\n');
-
-			if (count == 0 || !ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
+			catch (SocketException) when (this.cancelToken.IsCancellationRequested)
 			{
-				this.Logger.LogWarning("Unable to parse request");
-
-				return;
+				//
 			}
-
-			var response = new ResponseBuilder();
-
-			var handler = this.TryHandleRequest(in request);
-
-			handler.Invoke(in request, ref response);
-
-			stream.Write(response.Span);
-
-			response.Dispose();
-
-			request.Dispose();
-
-			ranges.Dispose();
-
-			client.Dispose();
 		}
 
 		private RequestHandler.RequestHandlerCallback TryHandleRequest(in Request request)
@@ -139,7 +149,9 @@ namespace Byrone.Xenia
 
 		public void Dispose()
 		{
-			this.Logger.LogInfo("Closing server...");
+			this.Logger?.LogInfo("Closing server...");
+
+			this.cancelRegistration.Dispose();
 
 			this.listener.Dispose();
 		}
