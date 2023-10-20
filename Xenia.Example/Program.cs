@@ -1,6 +1,8 @@
 ﻿using System.Text;
 using System.Threading;
+using Byrone.Xenia.Data;
 using Byrone.Xenia.Extensions;
+using Byrone.Xenia.Helpers;
 
 namespace Byrone.Xenia.Example
 {
@@ -19,10 +21,11 @@ namespace Byrone.Xenia.Example
 
 			var server = new Server(options, cancelTokenSource.Token);
 
-			server.RegisterHandler(new RequestHandler("/"u8, Program.SimpleHandler));
-			server.RegisterHandler(new RequestHandler("/test"u8, Program.SimpleHandler));
-			server.RegisterHandler(new RequestHandler("/json"u8, Program.JsonHandler));
-			server.RegisterHandler(new RequestHandler(HttpMethod.Post, "/post"u8, Program.SimpleHandler));
+			server.AddRazorPage<Test>("/"u8);
+			server.AddRazorPage<Test>("/test"u8);
+
+			server.AddRequestHandler(new RequestHandler("/json"u8, Program.JsonHandler));
+			server.AddRequestHandler(new RequestHandler(HttpMethod.Post, "/post"u8, Program.SimpleHandler));
 
 			var thread = new Thread(server.Listen);
 
@@ -33,7 +36,7 @@ namespace Byrone.Xenia.Example
 		{
 			var html = $"<html><body><h1>Hello from {Encoding.UTF8.GetString(request.Path)}!</h1></html></body>";
 
-			response.AppendHtml(in request, StatusCodes.Status200OK, html);
+			response.AppendHtml(in request, in StatusCodes.Status200OK, html);
 		}
 
 		private static void JsonHandler(in Request request, ref ResponseBuilder response)
@@ -42,7 +45,11 @@ namespace Byrone.Xenia.Example
 
 			var jsonSize = Encoding.UTF8.GetByteCount(json);
 
-			response.AppendHeaders(in request, StatusCodes.Status200OK, "application/json"u8, jsonSize);
+			// @todo request.TryGetHeader("Accept-Encoding"u8, out var encodingHeader)
+			response.AppendHeaders(in StatusCodes.Status200OK,
+								   System.ReadOnlySpan<byte>.Empty,
+								   "application/json"u8,
+								   jsonSize);
 
 			var span = response.Take(jsonSize);
 

@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
+using Byrone.Xenia.Data;
+using Byrone.Xenia.Helpers;
 using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Extensions
@@ -18,8 +20,8 @@ namespace Byrone.Xenia.Extensions
 			@this.Append("\r\n"u8);
 
 		public static void AppendHeaders(this ref ResponseBuilder @this,
-										 in Request request,
-										 StatusCode code,
+										 in StatusCode code,
+										 System.ReadOnlySpan<byte> contentEncoding,
 										 System.ReadOnlySpan<byte> contentType,
 										 int contentLength)
 		{
@@ -51,12 +53,12 @@ namespace Byrone.Xenia.Extensions
 			@this.AppendLineEnd();
 
 			// @todo Encoding/compression support (gzip breaks on Safari, MacOS)
-			/*if (request.HeaderData.TryGetHeader("Accept-Encoding"u8, out var header))
+			if (!contentEncoding.IsEmpty)
 			{
 				@this.Append("Content-Encoding: "u8);
-				@this.Append(header.Value);
+				@this.Append(contentEncoding);
 				@this.AppendLineEnd();
-			}*/
+			}
 
 			@this.AppendLineEnd();
 		}
@@ -64,26 +66,27 @@ namespace Byrone.Xenia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void AppendHtmlHeaders(this ref ResponseBuilder @this,
 											 in Request request,
-											 StatusCode code,
+											 in StatusCode code,
 											 int contentLength) =>
-			@this.AppendHeaders(in request, code, "text/html"u8, contentLength);
+			// @todo request.TryGetHeader("Accept-Encoding"u8, out var encodingHeader)
+			@this.AppendHeaders(in code, System.ReadOnlySpan<byte>.Empty, "text/html"u8, contentLength);
 
 		public static void AppendHtml(this ref ResponseBuilder @this,
 									  in Request request,
-									  StatusCode code,
+									  in StatusCode code,
 									  System.ReadOnlySpan<char> html)
 		{
-			@this.AppendHtmlHeaders(in request, code, ResponseExtensions.enc.GetByteCount(html));
+			@this.AppendHtmlHeaders(in request, in code, ResponseExtensions.enc.GetByteCount(html));
 
 			@this.Append(html);
 		}
 
 		public static void AppendHtml(this ref ResponseBuilder @this,
 									  in Request request,
-									  StatusCode code,
+									  in StatusCode code,
 									  System.ReadOnlySpan<byte> html)
 		{
-			@this.AppendHtmlHeaders(in request, code, html.Length);
+			@this.AppendHtmlHeaders(in request, in code, html.Length);
 
 			@this.Append(html);
 		}

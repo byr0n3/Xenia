@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Byrone.Xenia.Helpers;
 using JetBrains.Annotations;
 
-namespace Byrone.Xenia
+namespace Byrone.Xenia.Data
 {
 	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
@@ -21,6 +21,23 @@ namespace Byrone.Xenia
 
 		public System.ReadOnlySpan<RequestHeader> Headers =>
 			this.HeaderData.AsSpan(0, this.HeaderCount);
+
+		public bool TryGetHeader(System.ReadOnlySpan<byte> key, out RequestHeader header)
+		{
+			foreach (var head in this.Headers)
+			{
+				if (!System.MemoryExtensions.SequenceEqual(head.Key, key))
+				{
+					continue;
+				}
+
+				header = head;
+				return true;
+			}
+
+			header = default;
+			return false;
+		}
 
 		public void Dispose() =>
 			this.HeaderData.Dispose();

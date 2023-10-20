@@ -1,5 +1,10 @@
-namespace Byrone.Xenia
+using System.Runtime.InteropServices;
+using JetBrains.Annotations;
+
+namespace Byrone.Xenia.Data
 {
+	[PublicAPI]
+	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct ServerOptions
 	{
 		public string IpAddress { get; init; }

@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Byrone.Xenia
+namespace Byrone.Xenia.Helpers
 {
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly unsafe struct SpanPointer<T> : System.IEquatable<SpanPointer<T>> where T : unmanaged

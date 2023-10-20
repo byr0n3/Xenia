@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Byrone.Xenia.Data;
 using Byrone.Xenia.Extensions;
 using Byrone.Xenia.Helpers;
 
@@ -36,10 +37,18 @@ namespace Byrone.Xenia
 			this.Logger.LogInfo($"Server started on http://{options.IpAddress}:{options.Port}");
 		}
 
-		public void RegisterHandler(RequestHandler handler) =>
-			this.handlers.Add(handler);
+		public void AddRequestHandler(in RequestHandler handler)
+		{
+			if (this.handlers.Contains(handler))
+			{
+				throw new System.ArgumentException("Request Handler with the same method and path already exists.",
+												   nameof(handler));
+			}
 
-		public bool UnregisterHandler(RequestHandler handler) =>
+			this.handlers.Add(handler);
+		}
+
+		public bool RemoveRequestHandler(in RequestHandler handler) =>
 			this.handlers.Remove(handler);
 
 		public void Listen()
@@ -118,13 +127,13 @@ namespace Byrone.Xenia
 
 		private static void MethodNotAllowedHandler(in Request request, ref ResponseBuilder response) =>
 			response.AppendHtml(in request,
-								StatusCodes.Status405MethodNotAllowed,
+								in StatusCodes.Status405MethodNotAllowed,
 								// @todo Customizable
 								"<html><body><h1>405 Method Not Allowed</h1></html></body>"u8);
 
 		private static void NotFoundHandler(in Request request, ref ResponseBuilder response) =>
 			response.AppendHtml(in request,
-								StatusCodes.Status404NotFound,
+								in StatusCodes.Status404NotFound,
 								// @todo Customizable
 								"<html><body><h1>404 Not Found</h1></html></body>"u8);
 

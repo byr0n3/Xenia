@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace Byrone.Xenia
+namespace Byrone.Xenia.Helpers
 {
 	public partial struct ResponseBuilder
 	{

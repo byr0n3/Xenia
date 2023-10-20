@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Byrone.Xenia
+namespace Byrone.Xenia.Data
 {
 	[PublicAPI]
 	public enum HttpMethod

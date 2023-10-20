@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
 
-namespace Byrone.Xenia
+namespace Byrone.Xenia.Helpers
 {
 	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
@@ -14,6 +14,9 @@ namespace Byrone.Xenia
 
 		public readonly System.Span<byte> Span =>
 			this.buffer.AsSpan(0, this.position);
+
+		public readonly byte[] Buffer =>
+			this.buffer.Data;
 
 		public ResponseBuilder() : this(1024)
 		{
@@ -73,7 +76,7 @@ namespace Byrone.Xenia
 
 		private readonly void EnsureAvailable(int size)
 		{
-			if ((this.position + size) >= this.buffer.Data.Length)
+			if ((this.position + size) >= this.Buffer.Length)
 			{
 				// @todo Resize buffer
 				throw new System.InvalidOperationException("Not enough space available");

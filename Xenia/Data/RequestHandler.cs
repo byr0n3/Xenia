@@ -1,8 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using Byrone.Xenia.Helpers;
+using JetBrains.Annotations;
 
-namespace Byrone.Xenia
+namespace Byrone.Xenia.Data
 {
+	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct RequestHandler : System.IEquatable<RequestHandler>
 	{
