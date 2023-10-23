@@ -56,14 +56,15 @@ namespace Byrone.Xenia.Helpers
 				headers[headerCount++] = new RequestHeader(key, value);
 			}
 
-			// @todo Parse request body (form data/json body)
-
 			request = new Request
 			{
 				Method = method,
 				Path = first.Slice(path),
 				HeaderData = headers,
 				HeaderCount = headerCount,
+				Body = method is HttpMethod.Post or HttpMethod.Put or HttpMethod.Patch
+					? bytes.Slice(ranges[^1])
+					: default,
 			};
 
 			return true;

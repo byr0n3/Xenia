@@ -19,6 +19,8 @@ namespace Byrone.Xenia.Data
 
 		public required int HeaderCount { get; init; }
 
+		public required SpanPointer<byte> Body { get; init; }
+
 		public System.ReadOnlySpan<RequestHeader> Headers =>
 			this.HeaderData.AsSpan(0, this.HeaderCount);
 

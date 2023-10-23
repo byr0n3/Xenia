@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 namespace Byrone.Xenia.Extensions
 {
 	[PublicAPI]
-	public static class ResponseExtensions
+	public static partial class ResponseExtensions
 	{
 		private static readonly Encoding enc = Encoding.UTF8;
 
@@ -61,34 +61,6 @@ namespace Byrone.Xenia.Extensions
 			}
 
 			@this.AppendLineEnd();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void AppendHtmlHeaders(this ref ResponseBuilder @this,
-											 in Request request,
-											 in StatusCode code,
-											 int contentLength) =>
-			// @todo request.TryGetHeader("Accept-Encoding"u8, out var encodingHeader)
-			@this.AppendHeaders(in code, System.ReadOnlySpan<byte>.Empty, "text/html"u8, contentLength);
-
-		public static void AppendHtml(this ref ResponseBuilder @this,
-									  in Request request,
-									  in StatusCode code,
-									  System.ReadOnlySpan<char> html)
-		{
-			@this.AppendHtmlHeaders(in request, in code, ResponseExtensions.enc.GetByteCount(html));
-
-			@this.Append(html);
-		}
-
-		public static void AppendHtml(this ref ResponseBuilder @this,
-									  in Request request,
-									  in StatusCode code,
-									  System.ReadOnlySpan<byte> html)
-		{
-			@this.AppendHtmlHeaders(in request, in code, html.Length);
-
-			@this.Append(html);
 		}
 	}
 }
