@@ -46,7 +46,6 @@ namespace Byrone.Xenia.Example
 
 			var jsonSize = Encoding.UTF8.GetByteCount(json);
 
-			// @todo request.TryGetHeader("Accept-Encoding"u8, out var encodingHeader)
 			response.AppendHeaders(in StatusCodes.Status200OK,
 								   request.HtmlVersion,
 								   System.ReadOnlySpan<byte>.Empty,
