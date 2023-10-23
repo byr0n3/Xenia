@@ -11,8 +11,11 @@ namespace Byrone.Xenia.Extensions
 											 in Request request,
 											 in StatusCode code,
 											 int contentLength) =>
-			// @todo request.TryGetHeader("Accept-Encoding"u8, out var encodingHeader)
-			@this.AppendHeaders(in code, System.ReadOnlySpan<byte>.Empty, "text/html"u8, contentLength);
+			@this.AppendHeaders(in code,
+								request.HtmlVersion,
+								System.ReadOnlySpan<byte>.Empty,
+								ContentTypes.Html,
+								contentLength);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void AppendHtml(this ref ResponseBuilder @this,

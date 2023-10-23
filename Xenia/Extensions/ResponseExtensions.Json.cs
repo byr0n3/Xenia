@@ -14,8 +14,20 @@ namespace Byrone.Xenia.Extensions
 		{
 			var bytes = Json.Serialize(data);
 
-			// @todo request.TryGetHeader("Accept-Encoding"u8, out var encodingHeader)
-			@this.AppendHeaders(in code, System.ReadOnlySpan<byte>.Empty, "application/json"u8, bytes.Length);
+			ResponseExtensions.AppendJson(ref @this, in request, in code, bytes);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void AppendJson(this ref ResponseBuilder @this,
+									  in Request request,
+									  in StatusCode code,
+									  System.ReadOnlySpan<byte> bytes)
+		{
+			@this.AppendHeaders(in code,
+								request.HtmlVersion,
+								System.ReadOnlySpan<byte>.Empty,
+								ContentTypes.Json,
+								bytes.Length);
 
 			@this.Append(bytes);
 		}

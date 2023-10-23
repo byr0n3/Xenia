@@ -48,8 +48,9 @@ namespace Byrone.Xenia.Example
 
 			// @todo request.TryGetHeader("Accept-Encoding"u8, out var encodingHeader)
 			response.AppendHeaders(in StatusCodes.Status200OK,
+								   request.HtmlVersion,
 								   System.ReadOnlySpan<byte>.Empty,
-								   "application/json"u8,
+								   ContentTypes.Json,
 								   jsonSize);
 
 			var span = response.Take(jsonSize);
@@ -61,9 +62,12 @@ namespace Byrone.Xenia.Example
 
 		private static void PostHandler(in Request request, ref ResponseBuilder builder)
 		{
+			// @todo Try parse multipart/form-data
+
 			if (!Json.TryGetBody(in request, out PostBody body))
 			{
 				builder.AppendHeaders(in StatusCodes.Status500InternalServerError,
+									  request.HtmlVersion,
 									  System.ReadOnlySpan<byte>.Empty,
 									  System.ReadOnlySpan<byte>.Empty,
 									  0);

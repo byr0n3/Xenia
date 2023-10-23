@@ -99,6 +99,7 @@ namespace Byrone.Xenia
 
 				handler.Invoke(in request, ref response);
 
+				// @todo Support compression/encoding (gZip, etc)
 				stream.Write(response.Span);
 
 				response.Dispose();
