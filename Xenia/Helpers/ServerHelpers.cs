@@ -190,7 +190,15 @@ namespace Byrone.Xenia.Helpers
 			return HttpMethod.None;
 		}
 
-		// slice off the \r\n characters
+		/// <summary>
+		/// slice off the \r\n characters
+		/// </summary>
+		public static System.ReadOnlySpan<byte> Strip(System.ReadOnlySpan<byte> bytes, System.Range range) =>
+			ServerHelpers.Strip(bytes, range.Start.Value, range.End.Value);
+
+		/// <summary>
+		/// slice off the \r\n characters
+		/// </summary>
 		private static System.ReadOnlySpan<byte> Strip(System.ReadOnlySpan<byte> bytes, int start, int length)
 		{
 			if (bytes[(start + length - 1)] == (byte)'\n')

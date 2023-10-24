@@ -61,11 +61,17 @@ namespace Byrone.Xenia.Example
 
 		private static void PostHandler(in Request request, ref ResponseBuilder builder)
 		{
-			// @todo Try parse multipart/form-data
-
-			if (!Json.TryGetBody(in request, out PostBody body))
+			if (MultipartFormData.TryParse(in request, out var data, out var count))
 			{
-				builder.AppendHeaders(in StatusCodes.Status500InternalServerError,
+				for (var i = 0; i < count; i++)
+				{
+					var item = data[i];
+
+					System.Console.WriteLine(System.Text.Encoding.UTF8.GetString(item.Name) + ": " +
+											 System.Text.Encoding.UTF8.GetString(item.Content));
+				}
+
+				builder.AppendHeaders(in StatusCodes.Status204NoContent,
 									  request.HtmlVersion,
 									  System.ReadOnlySpan<byte>.Empty,
 									  System.ReadOnlySpan<byte>.Empty,
@@ -73,7 +79,17 @@ namespace Byrone.Xenia.Example
 				return;
 			}
 
-			builder.AppendJson(in request, in StatusCodes.Status200OK, body);
+			if (Json.TryGetBody(in request, out PostBody body))
+			{
+				builder.AppendJson(in request, in StatusCodes.Status200OK, body);
+				return;
+			}
+
+			builder.AppendHeaders(in StatusCodes.Status500InternalServerError,
+								  request.HtmlVersion,
+								  System.ReadOnlySpan<byte>.Empty,
+								  System.ReadOnlySpan<byte>.Empty,
+								  0);
 		}
 	}
 }

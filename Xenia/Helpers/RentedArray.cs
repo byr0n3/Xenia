@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace Byrone.Xenia.Helpers
@@ -28,6 +29,8 @@ namespace Byrone.Xenia.Helpers
 
 			this.Size = size;
 			this.Data = this.pool.Rent(this.Size);
+
+			Debug.Assert(this.Data.Length >= this.Size);
 		}
 
 		public System.Span<T> AsSpan(int start = 0, int size = 0)

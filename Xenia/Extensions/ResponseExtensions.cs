@@ -16,6 +16,10 @@ namespace Byrone.Xenia.Extensions
 			@this.Append(' ');
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void AppendColon(this ref ResponseBuilder @this) =>
+			@this.Append(':');
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void AppendLineEnd(this ref ResponseBuilder @this) =>
 			@this.Append("\r\n"u8);
 
@@ -37,24 +41,41 @@ namespace Byrone.Xenia.Extensions
 
 			// Headers
 
-			@this.Append("Date: "u8);
+			@this.Append(Headers.Date);
+			@this.AppendColon();
+			@this.AppendSpace();
 			@this.Append(System.DateTime.UtcNow);
 			@this.AppendLineEnd();
 
-			@this.Append("Server: Xenia"u8);
+			@this.Append(Headers.Server);
+			@this.AppendColon();
+			@this.AppendSpace();
+			@this.Append("Xenia"u8);
 			@this.AppendLineEnd();
 
-			@this.Append("Content-Type: "u8);
-			@this.Append(contentType);
-			@this.AppendLineEnd();
+			if (!contentType.IsEmpty)
+			{
+				@this.Append(Headers.ContentType);
+				@this.AppendColon();
+				@this.AppendSpace();
+				@this.Append(contentType);
+				@this.AppendLineEnd();
+			}
 
-			@this.Append("Content-Length: "u8);
-			@this.Append(contentLength);
-			@this.AppendLineEnd();
+			if (contentLength > 0)
+			{
+				@this.Append(Headers.ContentLength);
+				@this.AppendColon();
+				@this.AppendSpace();
+				@this.Append(contentLength);
+				@this.AppendLineEnd();
+			}
 
 			if (!contentEncoding.IsEmpty)
 			{
-				@this.Append("Content-Encoding: "u8);
+				@this.Append(Headers.ContentEncoding);
+				@this.AppendColon();
+				@this.AppendSpace();
 				@this.Append(contentEncoding);
 				@this.AppendLineEnd();
 			}

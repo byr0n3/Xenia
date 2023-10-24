@@ -8,7 +8,9 @@ namespace Byrone.Xenia.Data
 {
 	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
+#if DEBUG
 	[DebuggerTypeProxy(typeof(Request.DebugView))]
+#endif
 	public readonly struct Request
 	{
 		public required HttpMethod Method { get; init; }
@@ -26,26 +28,10 @@ namespace Byrone.Xenia.Data
 		public System.ReadOnlySpan<RequestHeader> Headers =>
 			this.HeaderData.AsSpan(0, this.HeaderCount);
 
-		public bool TryGetHeader(System.ReadOnlySpan<byte> key, out RequestHeader header)
-		{
-			foreach (var head in this.Headers)
-			{
-				if (!System.MemoryExtensions.SequenceEqual(head.Key, key))
-				{
-					continue;
-				}
-
-				header = head;
-				return true;
-			}
-
-			header = default;
-			return false;
-		}
-
 		public void Dispose() =>
 			this.HeaderData.Dispose();
 
+#if DEBUG
 		private sealed class DebugView
 		{
 			private static readonly System.Text.Encoding encoding = System.Text.Encoding.Latin1;
@@ -78,5 +64,6 @@ namespace Byrone.Xenia.Data
 				}
 			}
 		}
+#endif
 	}
 }

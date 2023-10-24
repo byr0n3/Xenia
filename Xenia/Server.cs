@@ -10,7 +10,7 @@ namespace Byrone.Xenia
 {
 	public sealed class Server : System.IDisposable
 	{
-		private const int bufferSize = 512;
+		private const int bufferSize = 1024;
 
 		private readonly TcpListener listener;
 		private readonly ServerOptions options;
@@ -76,13 +76,15 @@ namespace Byrone.Xenia
 					return;
 				}
 
-				System.Span<byte> buffer = stackalloc byte[Server.bufferSize];
+				// @todo Resizable
+				var buffer = new RentedArray<byte>(Server.bufferSize);
 
-				var read = stream.Read(buffer);
+				var read = stream.Read(buffer.AsSpan());
 
-				var bytes = buffer.Slice(0, read);
+				var bytes = buffer.AsSpan().Slice(0, read);
 
-				var ranges = new RentedArray<System.Range>(15); // @todo
+				// @todo Resizable
+				var ranges = new RentedArray<System.Range>(15);
 
 				var count = bytes.Split(ranges.Data, (byte)'\n');
 

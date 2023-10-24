@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Byrone.Xenia.Data;
+using Byrone.Xenia.Extensions;
 using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Helpers
@@ -9,8 +10,8 @@ namespace Byrone.Xenia.Helpers
 	{
 		public static bool TryGetBody<T>(in Request request, out T @out) where T : IJson<T>
 		{
-			if (!request.TryGetHeader("Content-Type"u8, out var contentHeader) ||
-				!System.MemoryExtensions.SequenceEqual(contentHeader.Value, "application/json"u8))
+			if (!request.TryGetHeader(Headers.ContentType, out var contentHeader) ||
+				!System.MemoryExtensions.SequenceEqual(contentHeader.Value.AsSpan, ContentTypes.Json))
 			{
 				@out = default;
 				return false;
