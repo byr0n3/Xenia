@@ -8,7 +8,7 @@ namespace Byrone.Xenia.Helpers
 	[PublicAPI]
 	public static class Json
 	{
-		public static bool TryGetBody<T>(in Request request, out T @out) where T : IJson<T>
+		public static bool TryParse<T>(in Request request, out T @out) where T : IJson<T>
 		{
 			if (!request.TryGetHeader(Headers.ContentType, out var contentHeader) ||
 				!System.MemoryExtensions.SequenceEqual(contentHeader.Value.AsSpan, ContentTypes.Json))
@@ -20,18 +20,26 @@ namespace Byrone.Xenia.Helpers
 			return Json.TryParse(request.Body, out @out);
 		}
 
-		public static bool TryParse<T>(System.ReadOnlySpan<byte> data, out T @out) where T : IJson<T>
+		private static bool TryParse<T>(System.ReadOnlySpan<byte> data, out T @out) where T : IJson<T>
 		{
-			var result = JsonSerializer.Deserialize(data, T.TypeInfo);
+			try
+			{
+				var result = JsonSerializer.Deserialize(data, T.TypeInfo);
 
-			if (result is null)
+				if (result is null)
+				{
+					@out = default;
+					return false;
+				}
+
+				@out = result;
+				return true;
+			}
+			catch (JsonException)
 			{
 				@out = default;
 				return false;
 			}
-
-			@out = result;
-			return true;
 		}
 
 		// @todo Return RentedArray<byte>

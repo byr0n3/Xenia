@@ -65,7 +65,7 @@ namespace Byrone.Xenia.Helpers
 
 			var htmlIdx = methodIdx + pathIdx + 2;
 
-			var html = ServerHelpers.Strip(line, htmlIdx, line.Length - htmlIdx);
+			var html = line.Trim(htmlIdx, line.Length - htmlIdx);
 
 			command = new HtmlCommand
 			{
@@ -125,9 +125,7 @@ namespace Byrone.Xenia.Helpers
 					break;
 				}
 
-				var end = range.End.Value;
-
-				var slice = ServerHelpers.Strip(bytes, range.Start.Value, end);
+				var slice = bytes.Trim(range);
 
 				var separatorIdx = System.MemoryExtensions.IndexOf(slice, semiColon);
 
@@ -137,11 +135,11 @@ namespace Byrone.Xenia.Helpers
 					continue;
 				}
 
-				var key = ServerHelpers.Strip(slice, 0, separatorIdx);
+				var key = slice.Trim(0, separatorIdx);
 
 				// add an offset to skip ': '
 				var valueIdx = separatorIdx + valueOffset;
-				var value = ServerHelpers.Strip(slice, valueIdx, slice.Length - (valueIdx));
+				var value = slice.Trim(valueIdx, slice.Length - (valueIdx));
 
 				headers[count++] = new RequestHeader(key, value);
 			}
@@ -188,30 +186,6 @@ namespace Byrone.Xenia.Helpers
 			}
 
 			return HttpMethod.None;
-		}
-
-		/// <summary>
-		/// slice off the \r\n characters
-		/// </summary>
-		public static System.ReadOnlySpan<byte> Strip(System.ReadOnlySpan<byte> bytes, System.Range range) =>
-			ServerHelpers.Strip(bytes, range.Start.Value, range.End.Value);
-
-		/// <summary>
-		/// slice off the \r\n characters
-		/// </summary>
-		private static System.ReadOnlySpan<byte> Strip(System.ReadOnlySpan<byte> bytes, int start, int length)
-		{
-			if (bytes[(start + length - 1)] == (byte)'\n')
-			{
-				length--;
-			}
-
-			if (bytes[(start + length - 1)] == (byte)'\r')
-			{
-				length--;
-			}
-
-			return bytes.Slice(start, length);
 		}
 
 		[StructLayout(LayoutKind.Sequential)]

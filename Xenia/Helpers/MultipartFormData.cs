@@ -54,7 +54,13 @@ namespace Byrone.Xenia.Helpers
 					continue;
 				}
 
-				var line = ServerHelpers.Strip(bytes, range);
+				var line = bytes.Trim(range);
+
+				// separator, ignore
+				if (!System.MemoryExtensions.StartsWith(line, "------"u8))
+				{
+					continue;
+				}
 
 				var nameIdx = System.MemoryExtensions.IndexOf(line, "name=\""u8);
 
@@ -63,16 +69,10 @@ namespace Byrone.Xenia.Helpers
 				{
 					nameIdx += 6;
 
-					var nameLength = System.MemoryExtensions.IndexOf(line.Slice(nameIdx), "\""u8);
+					var nameLength = System.MemoryExtensions.IndexOf(line.Slice(nameIdx), (byte)'\\');
 
 					nameBytes = line.Slice(nameIdx, nameLength);
 
-					continue;
-				}
-
-				// separator, ignore
-				if (!System.MemoryExtensions.StartsWith(line, "------"u8))
-				{
 					continue;
 				}
 

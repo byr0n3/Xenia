@@ -1,25 +1,22 @@
 using System.Net;
 using System.Net.Http;
-using System.Text;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Byrone.Xenia.Extensions;
 using Byrone.Xenia.Helpers;
-using HttpMethod = Byrone.Xenia.Data.HttpMethod;
 
 namespace Xenia.Tests
 {
 	[TestClass]
 	public sealed class ServerTests
 	{
-		private const string testHtml = "<html><body><h1>Hello world!</h1></body></html>";
-		private const string testJson = "{\"test\": \"It seems to work!\"}";
-		internal const string RazorHtml = "This is a razor page!";
+		internal static readonly int Port = System.Random.Shared.Next(100, 10000);
 
-		private static readonly TestModel testModel = new() { Value = "This is a test model." };
-
-		private static readonly int port = System.Random.Shared.Next(100, 10000);
-		private static readonly string baseUrl = $"http://localhost:{ServerTests.port}";
+		private static readonly HttpClient httpClient = new()
+		{
+			BaseAddress = new System.Uri($"http://localhost:{ServerTests.Port}"),
+		};
 
 		private static CancellationTokenSource? tokenSource;
 		private static Server? server;
@@ -29,19 +26,7 @@ namespace Xenia.Tests
 		{
 			ServerTests.tokenSource = new CancellationTokenSource();
 
-			var options = new ServerOptions
-			{
-				IpAddress = "0.0.0.0",
-				Port = ServerTests.port,
-			};
-
-			ServerTests.server = new Server(options, ServerTests.tokenSource.Token);
-
-			ServerTests.server.AddRequestHandler(new RequestHandler("/test"u8, ServerTests.Handler));
-			ServerTests.server.AddRequestHandler(new RequestHandler("/json"u8, ServerTests.JsonHandler));
-			ServerTests.server.AddRequestHandler(new RequestHandler("/json/model"u8, ServerTests.JsonModelHandler));
-			ServerTests.server.AddRequestHandler(new RequestHandler(HttpMethod.Post, "/post"u8, ServerTests.Handler));
-			ServerTests.server.AddRazorPage<TestPage>("/razor"u8);
+			ServerTests.server = TestHelpers.CreateServer(ServerTests.tokenSource.Token);
 
 			var thread = new Thread(ServerTests.server.Listen);
 			thread.Start();
@@ -55,15 +40,6 @@ namespace Xenia.Tests
 			ServerTests.server?.Dispose();
 		}
 
-		private static void Handler(in Request request, ref ResponseBuilder response) =>
-			response.AppendHtml(in request, in StatusCodes.Status200OK, ServerTests.testHtml);
-
-		private static void JsonHandler(in Request request, ref ResponseBuilder response) =>
-			response.AppendJson(in request, in StatusCodes.Status200OK, Encoding.UTF8.GetBytes(ServerTests.testJson));
-
-		private static void JsonModelHandler(in Request request, ref ResponseBuilder response) =>
-			response.AppendJson(in request, in StatusCodes.Status200OK, ServerTests.testModel);
-
 		[TestMethod]
 		public async Task ServerCanAddAndRemoveHandlersAsync()
 		{
@@ -72,21 +48,19 @@ namespace Xenia.Tests
 				throw new System.Exception("Server not initialized");
 			}
 
-			var httpClient = new HttpClient();
-
 			var handler = new RequestHandler("/temp"u8, TempHandler);
 
 			ServerTests.server.AddRequestHandler(in handler);
 
-			var response = await httpClient.GetAsync($"{ServerTests.baseUrl}/temp").ConfigureAwait(false);
+			var response = await ServerTests.httpClient.GetAsync("/temp").ConfigureAwait(false);
 
 			Assert.IsTrue(response.StatusCode == HttpStatusCode.OK);
 
 			response.Dispose();
 
-			ServerTests.server.RemoveRequestHandler(handler);
+			ServerTests.server.RemoveRequestHandler(in handler);
 
-			response = await httpClient.GetAsync($"{ServerTests.baseUrl}/temp").ConfigureAwait(false);
+			response = await ServerTests.httpClient.GetAsync("/temp").ConfigureAwait(false);
 
 			Assert.IsTrue(response.StatusCode == HttpStatusCode.NotFound);
 
@@ -105,15 +79,13 @@ namespace Xenia.Tests
 		[TestMethod]
 		public async Task ServerCanReturnHtmlAsync()
 		{
-			var httpClient = new HttpClient();
-
-			var response = await httpClient.GetAsync($"{ServerTests.baseUrl}/test").ConfigureAwait(false);
+			var response = await ServerTests.httpClient.GetAsync("/test").ConfigureAwait(false);
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/html");
 
 			var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-			Assert.IsTrue(string.Equals(html, ServerTests.testHtml, System.StringComparison.Ordinal));
+			Assert.IsTrue(string.Equals(html, TestHelpers.TestHtml, System.StringComparison.Ordinal));
 
 			response.Dispose();
 		}
@@ -121,15 +93,13 @@ namespace Xenia.Tests
 		[TestMethod]
 		public async Task ServerCanReturnRawJsonAsync()
 		{
-			var httpClient = new HttpClient();
-
-			var response = await httpClient.GetAsync($"{ServerTests.baseUrl}/json").ConfigureAwait(false);
+			var response = await ServerTests.httpClient.GetAsync("/json").ConfigureAwait(false);
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
 
 			var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-			Assert.IsTrue(string.Equals(html, ServerTests.testJson, System.StringComparison.Ordinal));
+			Assert.IsTrue(string.Equals(html, TestHelpers.TestJson, System.StringComparison.Ordinal));
 
 			response.Dispose();
 		}
@@ -137,17 +107,13 @@ namespace Xenia.Tests
 		[TestMethod]
 		public async Task ServerCanReturnJsonFromEntityAsync()
 		{
-			var httpClient = new HttpClient();
-
-			var response = await httpClient.GetAsync($"{ServerTests.baseUrl}/json/model").ConfigureAwait(false);
+			var response = await ServerTests.httpClient.GetAsync("/json/model").ConfigureAwait(false);
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
 
-			var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+			var content = await response.Content.ReadFromJsonAsync<Person>().ConfigureAwait(false);
 
-			Assert.IsTrue(string.Equals(html,
-										Encoding.UTF8.GetString(Json.Serialize(ServerTests.testModel)),
-										System.StringComparison.Ordinal));
+			Assert.IsTrue(content == TestHelpers.Person);
 
 			response.Dispose();
 		}
@@ -155,16 +121,31 @@ namespace Xenia.Tests
 		[TestMethod]
 		public async Task ServerCanRenderRazorPageAsync()
 		{
-			var httpClient = new HttpClient();
-
-			var response = await httpClient.GetAsync($"{ServerTests.baseUrl}/razor").ConfigureAwait(false);
+			var response = await ServerTests.httpClient.GetAsync("/razor").ConfigureAwait(false);
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/html");
 
 			var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
 			// @todo Stricter?
-			Assert.IsTrue(html.Contains(ServerTests.RazorHtml, System.StringComparison.Ordinal));
+			Assert.IsTrue(html.Contains(TestHelpers.TestRazor, System.StringComparison.Ordinal));
+
+			response.Dispose();
+		}
+
+		[TestMethod]
+		public async Task ServerCanParseAndReturnJsonAsync()
+		{
+			var response = await
+				ServerTests.httpClient
+						   .PostAsJsonAsync("/post/json", TestHelpers.Person)
+						   .ConfigureAwait(false);
+
+			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
+
+			var content = await response.Content.ReadFromJsonAsync<Person>().ConfigureAwait(false);
+
+			Assert.IsTrue(content == TestHelpers.Person);
 
 			response.Dispose();
 		}
@@ -174,9 +155,7 @@ namespace Xenia.Tests
 		{
 			try
 			{
-				var httpClient = new HttpClient();
-
-				var response = await httpClient.GetAsync(ServerTests.baseUrl).ConfigureAwait(false);
+				var response = await ServerTests.httpClient.GetAsync("/").ConfigureAwait(false);
 
 				Assert.IsTrue(response.StatusCode == HttpStatusCode.NotFound);
 
@@ -193,9 +172,7 @@ namespace Xenia.Tests
 		{
 			try
 			{
-				var httpClient = new HttpClient();
-
-				var response = await httpClient.GetAsync($"{ServerTests.baseUrl}/post").ConfigureAwait(false);
+				var response = await ServerTests.httpClient.GetAsync("/post").ConfigureAwait(false);
 
 				Assert.IsTrue(response.StatusCode == HttpStatusCode.MethodNotAllowed);
 

@@ -79,7 +79,7 @@ namespace Byrone.Xenia.Example
 				return;
 			}
 
-			if (Json.TryGetBody(in request, out PostBody body))
+			if (Json.TryParse(in request, out PostBody body))
 			{
 				builder.AppendJson(in request, in StatusCodes.Status200OK, body);
 				return;

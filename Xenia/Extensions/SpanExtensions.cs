@@ -43,5 +43,24 @@ namespace Byrone.Xenia.Extensions
 
 			return count;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static System.ReadOnlySpan<byte> Trim(this System.ReadOnlySpan<byte> @this, System.Range range) =>
+			SpanExtensions.Trim(@this, range.Start.Value, range.End.Value);
+
+		public static System.ReadOnlySpan<byte> Trim(this System.ReadOnlySpan<byte> @this, int start, int length)
+		{
+			if (@this[(start + length - 1)] == (byte)'\n')
+			{
+				length--;
+			}
+
+			if (@this[(start + length - 1)] == (byte)'\r')
+			{
+				length--;
+			}
+
+			return @this.Slice(start, length);
+		}
 	}
 }
