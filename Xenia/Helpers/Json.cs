@@ -11,10 +11,24 @@ namespace Byrone.Xenia.Helpers
 		public static bool TryParse<T>(in Request request, out T @out) where T : IJson<T>
 		{
 			if (!request.TryGetHeader(Headers.ContentType, out var contentHeader) ||
-				!System.MemoryExtensions.SequenceEqual(contentHeader.Value.AsSpan, ContentTypes.Json))
+				!System.MemoryExtensions.StartsWith(contentHeader.Value.AsSpan, ContentTypes.Json))
 			{
 				@out = default;
 				return false;
+			}
+
+			if (request.TryGetHeader(Headers.TransferEncoding, out var encodingHeader) &&
+				System.MemoryExtensions.StartsWith(encodingHeader.Value, "chunked"u8))
+			{
+				var length = ChunkedContent.ParseChunkedContent(request.Body, out var content);
+
+				using (content)
+				{
+					if (length != 0)
+					{
+						return Json.TryParse(content.AsSpan(0, length), out @out);
+					}
+				}
 			}
 
 			return Json.TryParse(request.Body, out @out);

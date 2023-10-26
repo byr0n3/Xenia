@@ -44,8 +44,7 @@ namespace Byrone.Xenia
 		{
 			if (this.handlers.Contains(handler))
 			{
-				throw new System.ArgumentException("Request Handler with the same method and path already exists.",
-												   nameof(handler));
+				throw new System.ArgumentException("Request Handler with the same method and path already exists.", nameof(handler));
 			}
 
 			this.handlers.Add(handler);
@@ -86,7 +85,7 @@ namespace Byrone.Xenia
 				// @todo Resizable
 				var ranges = new RentedArray<System.Range>(15);
 
-				var count = bytes.Split(ranges.Data, (byte)'\n');
+				var count = bytes.Split(ranges.Data, Characters.NewLine);
 
 				if (count == 0 || !ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
 				{
@@ -110,11 +109,17 @@ namespace Byrone.Xenia
 
 				ranges.Dispose();
 
+				buffer.Dispose();
+
 				client.Dispose();
 			}
 			catch (SocketException) when (this.cancelToken.IsCancellationRequested)
 			{
 				//
+			}
+			catch (System.Exception ex)
+			{
+				this.Logger?.LogException(ex, "Exception thrown while handling request");
 			}
 		}
 

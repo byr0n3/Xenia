@@ -20,8 +20,11 @@ namespace Byrone.Xenia.Extensions
 			@this.Append(':');
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void AppendLineEnd(this ref ResponseBuilder @this) =>
-			@this.Append("\r\n"u8);
+		public static void AppendLineEnd(this ref ResponseBuilder @this)
+		{
+			@this.Append(Characters.Reset);
+			@this.Append(Characters.NewLine);
+		}
 
 		public static void AppendHeaders(this ref ResponseBuilder @this,
 										 in StatusCode code,

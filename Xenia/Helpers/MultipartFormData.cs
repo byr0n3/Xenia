@@ -16,6 +16,20 @@ namespace Byrone.Xenia.Helpers
 				return false;
 			}
 
+			if (request.TryGetHeader(Headers.TransferEncoding, out var encodingHeader) &&
+				System.MemoryExtensions.StartsWith(encodingHeader.Value, "chunked"u8))
+			{
+				var length = ChunkedContent.ParseChunkedContent(request.Body, out var content);
+
+				using (content)
+				{
+					if (length != 0)
+					{
+						return MultipartFormData.TryParse(content.AsSpan(0, length), out @out, out count);
+					}
+				}
+			}
+
 			return MultipartFormData.TryParse(request.Body, out @out, out count);
 		}
 
@@ -28,10 +42,12 @@ namespace Byrone.Xenia.Helpers
 			// @todo Lower + resizable
 			var ranges = new RentedArray<System.Range>(32);
 
-			var count = bytes.Split(ranges.Data, (byte)'\n');
+			var count = bytes.Split(ranges.Data, Characters.NewLine);
 
 			if (count == 0)
 			{
+				ranges.Dispose();
+
 				@out = default;
 				outCount = 0;
 				return false;
@@ -54,7 +70,7 @@ namespace Byrone.Xenia.Helpers
 					continue;
 				}
 
-				var line = bytes.Trim(range);
+				var line = bytes.SliceTrimmed(range);
 
 				// separator, ignore
 				if (!System.MemoryExtensions.StartsWith(line, "------"u8))
@@ -85,6 +101,8 @@ namespace Byrone.Xenia.Helpers
 				nameBytes = default;
 				contentBytes = default;
 			}
+
+			ranges.Dispose();
 
 			return true;
 		}

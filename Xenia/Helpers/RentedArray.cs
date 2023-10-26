@@ -1,9 +1,11 @@
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Helpers
 {
+	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct RentedArray<T> : System.IDisposable
 	{

@@ -6,13 +6,13 @@ namespace Byrone.Xenia.Example
 {
 	[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower,
 								 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-	[JsonSerializable(typeof(PostBody))]
-	internal sealed partial class PostBodySerializerContext : JsonSerializerContext;
+	[JsonSerializable(typeof(Person))]
+	internal sealed partial class PersonSerializerContext : JsonSerializerContext;
 
-	public readonly struct PostBody : IJson<PostBody>
+	public readonly struct Person : IJson<Person>
 	{
-		public static JsonTypeInfo<PostBody> TypeInfo =>
-			PostBodySerializerContext.Default.PostBody;
+		public static JsonTypeInfo<Person> TypeInfo =>
+			PersonSerializerContext.Default.Person;
 
 		[JsonPropertyName("name")] public string Name { get; init; }
 

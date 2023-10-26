@@ -31,7 +31,7 @@ namespace Byrone.Xenia.Helpers
 		public override bool Equals(object? @object) =>
 			@object is SpanPointer<T> other && this.Equals(other);
 
-		// @todo
+		// @todo ???
 		public override int GetHashCode() =>
 			System.HashCode.Combine(unchecked((int)(long)this.Start), this.Length);
 

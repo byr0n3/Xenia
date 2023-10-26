@@ -1,14 +1,14 @@
 using System.Runtime.InteropServices;
 using Byrone.Xenia.Data;
 using Byrone.Xenia.Extensions;
+using Bytes = System.ReadOnlySpan<byte>;
+using Ranges = System.ReadOnlySpan<System.Range>;
 
 namespace Byrone.Xenia.Helpers
 {
 	internal static class ServerHelpers
 	{
-		public static bool TryGetRequest(System.ReadOnlySpan<byte> bytes,
-										 System.ReadOnlySpan<System.Range> ranges,
-										 out Request request)
+		public static bool TryGetRequest(Bytes bytes, Ranges ranges, out Request request)
 		{
 			if (!ServerHelpers.TryGetHtmlCommand(bytes, ranges, out var command))
 			{
@@ -18,7 +18,7 @@ namespace Byrone.Xenia.Helpers
 
 			// skip the html command
 			var headers = new RentedArray<RequestHeader>(ranges.Length - 1);
-			var headerCount = ServerHelpers.ParseHeaders(bytes, ref headers, ranges);
+			var headerCount = ServerHelpers.ParseHeaders(bytes, ranges, ref headers);
 
 			request = new Request
 			{
@@ -33,9 +33,7 @@ namespace Byrone.Xenia.Helpers
 			return true;
 		}
 
-		private static bool TryGetHtmlCommand(System.ReadOnlySpan<byte> bytes,
-											  System.ReadOnlySpan<System.Range> ranges,
-											  out HtmlCommand command)
+		private static bool TryGetHtmlCommand(Bytes bytes, Ranges ranges, out HtmlCommand command)
 		{
 			const byte space = (byte)' ';
 
@@ -65,7 +63,7 @@ namespace Byrone.Xenia.Helpers
 
 			var htmlIdx = methodIdx + pathIdx + 2;
 
-			var html = line.Trim(htmlIdx, line.Length - htmlIdx);
+			var html = line.SliceTrimmed(htmlIdx, line.Length - htmlIdx);
 
 			command = new HtmlCommand
 			{
@@ -77,13 +75,11 @@ namespace Byrone.Xenia.Helpers
 			return true;
 		}
 
-		private static System.ReadOnlySpan<byte> GetRequestBody(HttpMethod method,
-																System.ReadOnlySpan<byte> bytes,
-																System.ReadOnlySpan<System.Range> ranges)
+		private static Bytes GetRequestBody(HttpMethod method, Bytes bytes, Ranges ranges)
 		{
 			if (method is not (HttpMethod.Post or HttpMethod.Put or HttpMethod.Patch))
 			{
-				return System.ReadOnlySpan<byte>.Empty;
+				return Bytes.Empty;
 			}
 
 			// get the index of the line that's just a new line
@@ -103,12 +99,10 @@ namespace Byrone.Xenia.Helpers
 				break;
 			}
 
-			return newLineIdx == 0 ? System.ReadOnlySpan<byte>.Empty : bytes.Slice(ranges[newLineIdx].Start.Value);
+			return newLineIdx == 0 ? Bytes.Empty : bytes.Slice(ranges[newLineIdx].Start.Value);
 		}
 
-		private static int ParseHeaders(System.ReadOnlySpan<byte> bytes,
-										ref RentedArray<RequestHeader> headers,
-										System.ReadOnlySpan<System.Range> ranges)
+		private static int ParseHeaders(Bytes bytes, Ranges ranges, ref RentedArray<RequestHeader> headers)
 		{
 			const byte semiColon = (byte)':';
 			const int valueOffset = sizeof(byte) * 2;
@@ -125,7 +119,7 @@ namespace Byrone.Xenia.Helpers
 					break;
 				}
 
-				var slice = bytes.Trim(range);
+				var slice = bytes.SliceTrimmed(range);
 
 				var separatorIdx = System.MemoryExtensions.IndexOf(slice, semiColon);
 
@@ -135,11 +129,11 @@ namespace Byrone.Xenia.Helpers
 					continue;
 				}
 
-				var key = slice.Trim(0, separatorIdx);
+				var key = slice.SliceTrimmed(0, separatorIdx);
 
 				// add an offset to skip ': '
 				var valueIdx = separatorIdx + valueOffset;
-				var value = slice.Trim(valueIdx, slice.Length - (valueIdx));
+				var value = slice.SliceTrimmed(valueIdx, slice.Length - (valueIdx));
 
 				headers[count++] = new RequestHeader(key, value);
 			}
@@ -148,7 +142,7 @@ namespace Byrone.Xenia.Helpers
 		}
 
 		// @todo Refactor
-		private static HttpMethod GetMethod(System.ReadOnlySpan<byte> bytes)
+		private static HttpMethod GetMethod(Bytes bytes)
 		{
 			if (System.MemoryExtensions.SequenceEqual(bytes, "GET"u8))
 			{

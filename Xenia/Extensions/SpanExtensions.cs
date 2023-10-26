@@ -1,18 +1,20 @@
 using System.Runtime.CompilerServices;
+using Byrone.Xenia.Helpers;
+using Bytes = System.ReadOnlySpan<byte>;
 
 namespace Byrone.Xenia.Extensions
 {
 	internal static class SpanExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static System.ReadOnlySpan<byte> Slice(this System.ReadOnlySpan<byte> value, System.Range range) =>
+		public static Bytes Slice(this Bytes value, System.Range range) =>
 			value.Slice(range.Start.Value, range.End.Value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Split(this System.Span<byte> bytes, System.Span<System.Range> ranges, byte separator) =>
-			SpanExtensions.Split((System.ReadOnlySpan<byte>)bytes, ranges, separator);
+			SpanExtensions.Split((Bytes)bytes, ranges, separator);
 
-		public static int Split(this System.ReadOnlySpan<byte> bytes, System.Span<System.Range> ranges, byte separator)
+		public static int Split(this Bytes bytes, System.Span<System.Range> ranges, byte separator)
 		{
 			var size = bytes.Length;
 
@@ -45,17 +47,17 @@ namespace Byrone.Xenia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static System.ReadOnlySpan<byte> Trim(this System.ReadOnlySpan<byte> @this, System.Range range) =>
-			SpanExtensions.Trim(@this, range.Start.Value, range.End.Value);
+		public static Bytes SliceTrimmed(this Bytes @this, System.Range range) =>
+			SpanExtensions.SliceTrimmed(@this, range.Start.Value, range.End.Value);
 
-		public static System.ReadOnlySpan<byte> Trim(this System.ReadOnlySpan<byte> @this, int start, int length)
+		public static Bytes SliceTrimmed(this Bytes @this, int start, int length)
 		{
-			if (@this[(start + length - 1)] == (byte)'\n')
+			if (@this[(start + length - 1)] == Characters.NewLine)
 			{
 				length--;
 			}
 
-			if (@this[(start + length - 1)] == (byte)'\r')
+			if (@this[(start + length - 1)] == Characters.Reset)
 			{
 				length--;
 			}
