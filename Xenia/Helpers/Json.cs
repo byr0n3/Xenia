@@ -10,6 +10,7 @@ namespace Byrone.Xenia.Helpers
 	{
 		public static bool TryParse<T>(in Request request, out T @out) where T : IJson<T>
 		{
+			// `StartsWith` in case the header contains the charset
 			if (!request.TryGetHeader(Headers.ContentType, out var contentHeader) ||
 				!System.MemoryExtensions.StartsWith(contentHeader.Value.AsSpan, ContentTypes.Json))
 			{

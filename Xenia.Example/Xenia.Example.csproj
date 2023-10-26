@@ -4,14 +4,27 @@
 		<OutputType>Exe</OutputType>
 		<AssemblyName>Byrone.Xenia.Example</AssemblyName>
 		<RootNamespace>Byrone.Xenia.Example</RootNamespace>
+		<IsPublishable>true</IsPublishable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' != 'Debug'">
+		<PublishAot>true</PublishAot>
+		<SelfContained>true</SelfContained>
+
+		<DebugType>none</DebugType>
+		<StripSymbols>true</StripSymbols>
+
+		<UseSystemResourceKeys>true</UseSystemResourceKeys>
+		<OptimizationPreference>Speed</OptimizationPreference>
+		<RootAllApplicationAssemblies>false</RootAllApplicationAssemblies>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Xenia\Xenia.csproj" />
+		<ProjectReference Include="..\Xenia\Xenia.csproj"/>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web"/>
 	</ItemGroup>
 
 </Project>
