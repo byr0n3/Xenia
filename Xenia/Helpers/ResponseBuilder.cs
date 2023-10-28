@@ -9,14 +9,14 @@ namespace Byrone.Xenia.Helpers
 	[StructLayout(LayoutKind.Sequential)]
 	public partial struct ResponseBuilder : System.IDisposable
 	{
-		private readonly RentedArray<byte> buffer;
+		private RentedArray<byte> buffer;
 		private int position;
 
 		public readonly System.Span<byte> Span =>
 			this.buffer.AsSpan(0, this.position);
 
-		public readonly byte[] Buffer =>
-			this.buffer.Data;
+		public readonly int Capacity =>
+			this.buffer.Size;
 
 		public ResponseBuilder() : this(1024)
 		{
@@ -74,12 +74,22 @@ namespace Byrone.Xenia.Helpers
 			this.Move(written);
 		}
 
-		private readonly void EnsureAvailable(int size)
+		private void Resize(int add)
 		{
-			if ((this.position + size) >= this.Buffer.Length)
+			var newBuffer = new RentedArray<byte>(this.Capacity + add, true);
+
+			this.buffer.AsSpan(0, this.position).CopyTo(newBuffer.AsSpan());
+
+			this.buffer.Dispose();
+
+			this.buffer = newBuffer;
+		}
+
+		private void EnsureAvailable(int size)
+		{
+			if ((this.position + size) >= this.Capacity)
 			{
-				// @todo Resize buffer
-				throw new System.InvalidOperationException("Not enough space available");
+				this.Resize(size);
 			}
 		}
 

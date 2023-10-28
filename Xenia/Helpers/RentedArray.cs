@@ -25,12 +25,16 @@ namespace Byrone.Xenia.Helpers
 		{
 		}
 
-		public RentedArray(int size, ArrayPool<T> pool)
+		public RentedArray(int size, bool useArrayLength) : this(size, ArrayPool<T>.Shared, useArrayLength)
+		{
+		}
+
+		public RentedArray(int baseSize, ArrayPool<T> pool, bool useArrayLength = false)
 		{
 			this.pool = pool;
 
-			this.Size = size;
-			this.Data = this.pool.Rent(this.Size);
+			this.Data = this.pool.Rent(baseSize);
+			this.Size = useArrayLength ? this.Data.Length : baseSize;
 
 			Debug.Assert(this.Data.Length >= this.Size);
 		}

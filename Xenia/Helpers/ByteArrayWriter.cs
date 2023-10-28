@@ -117,12 +117,13 @@ namespace Byrone.Xenia.Helpers
 				return;
 			}
 
-			using (var temp = new RentedArray<char>(value.Length))
-			{
-				value.CopyTo(0, temp.Data, value.Length);
+			var temp = new RentedArray<char>(value.Length);
 
-				this.Write(temp.AsSpan(0, value.Length));
-			}
+			value.CopyTo(0, temp.Data, value.Length);
+
+			this.Write(temp.AsSpan(0, value.Length));
+
+			temp.Dispose();
 		}
 
 		#endregion

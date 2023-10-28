@@ -31,5 +31,9 @@ namespace Byrone.Xenia.Extensions
 
 			@this.Append(bytes);
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Append<T>(this ref ResponseBuilder @this, T item) where T : IJson<T> =>
+			@this.Append(Json.Serialize(item));
 	}
 }

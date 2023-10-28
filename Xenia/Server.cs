@@ -72,40 +72,40 @@ namespace Byrone.Xenia
 				{
 					this.Logger?.LogWarning("Received an unreadable stream");
 
+					client.Dispose();
+
 					return;
 				}
 
-				// @todo Resizable
+				// @todo ResizableRentedArray
 				var buffer = new RentedArray<byte>(Server.bufferSize);
 
 				var read = stream.Read(buffer.AsSpan());
 
 				var bytes = buffer.AsSpan().Slice(0, read);
 
-				// @todo Resizable
-				var ranges = new RentedArray<System.Range>(15);
+				// @todo ResizableRentedArray
+				var ranges = new RentedArray<System.Range>(32);
 
 				var count = bytes.Split(ranges.Data, Characters.NewLine);
 
-				if (count == 0 || !ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
-				{
-					this.Logger?.LogWarning("Unable to parse request");
-
-					return;
-				}
-
 				var response = new ResponseBuilder();
 
-				var handler = this.TryHandleRequest(in request);
+				if (count != 0 && !ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
+				{
+					this.GetRequestHandler(in request).Invoke(in request, ref response);
 
-				handler.Invoke(in request, ref response);
+					request.Dispose();
+				}
+				else
+				{
+					Server.WriteInternalServerError(ref response);
+				}
 
 				// @todo Support compression/encoding (gZip, etc)
 				stream.Write(response.Span);
 
 				response.Dispose();
-
-				request.Dispose();
 
 				ranges.Dispose();
 
@@ -117,13 +117,9 @@ namespace Byrone.Xenia
 			{
 				//
 			}
-			catch (System.Exception ex)
-			{
-				this.Logger?.LogException(ex, "Exception thrown while handling request");
-			}
 		}
 
-		private RequestHandler.RequestHandlerCallback TryHandleRequest(in Request request)
+		private RequestHandler.RequestHandlerCallback GetRequestHandler(in Request request)
 		{
 			foreach (var handler in this.handlers)
 			{
@@ -134,26 +130,33 @@ namespace Byrone.Xenia
 
 				if (handler.Method != request.Method)
 				{
-					return Server.MethodNotAllowedHandler;
+					return Server.WriteMethodNotAllowed;
 				}
 
 				return handler.Handler;
 			}
 
-			return Server.NotFoundHandler;
+			return Server.WriteNotFound;
 		}
 
-		private static void MethodNotAllowedHandler(in Request request, ref ResponseBuilder response) =>
+		private static void WriteMethodNotAllowed(in Request request, ref ResponseBuilder response) =>
 			response.AppendHtml(in request,
 								in StatusCodes.Status405MethodNotAllowed,
 								// @todo Customizable
 								"<html><body><h1>405 Method Not Allowed</h1></html></body>"u8);
 
-		private static void NotFoundHandler(in Request request, ref ResponseBuilder response) =>
+		private static void WriteNotFound(in Request request, ref ResponseBuilder response) =>
 			response.AppendHtml(in request,
 								in StatusCodes.Status404NotFound,
 								// @todo Customizable
 								"<html><body><h1>404 Not Found</h1></html></body>"u8);
+
+		private static void WriteInternalServerError(ref ResponseBuilder response) =>
+			response.AppendHeaders(in StatusCodes.Status404NotFound,
+								   "HTML/1.1"u8,
+								   System.ReadOnlySpan<byte>.Empty,
+								   System.ReadOnlySpan<byte>.Empty,
+								   0);
 
 		public void Dispose()
 		{

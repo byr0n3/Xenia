@@ -27,6 +27,7 @@ namespace Byrone.Xenia.Example
 			server.AddRequestHandler(new RequestHandler("/html"u8, Program.RawHtmlHandler));
 			server.AddRequestHandler(new RequestHandler("/json"u8, Program.JsonHandler));
 			server.AddRequestHandler(new RequestHandler(HttpMethod.Post, "/post"u8, Program.PostHandler));
+			server.AddRequestHandler(new RequestHandler("/resize"u8, Program.ResizeHandler));
 
 			var thread = new Thread(server.Listen);
 
@@ -90,6 +91,37 @@ namespace Byrone.Xenia.Example
 								  System.ReadOnlySpan<byte>.Empty,
 								  System.ReadOnlySpan<byte>.Empty,
 								  0);
+		}
+
+		private static void ResizeHandler(in Request request, ref ResponseBuilder builder)
+		{
+			const int size = 10000;
+
+			builder.AppendHeaders(in StatusCodes.Status200OK,
+								  request.HtmlVersion,
+								  System.ReadOnlySpan<byte>.Empty,
+								  ContentTypes.Json,
+								  0);
+
+			builder.Append('[');
+
+			for (var i = 0; i < size; i++)
+			{
+				var person = new Person
+				{
+					Name = "Person " + i,
+					Age = i,
+				};
+
+				builder.Append(person);
+
+				if (i < size - 1)
+				{
+					builder.Append(',');
+				}
+			}
+
+			builder.Append(']');
 		}
 	}
 }
