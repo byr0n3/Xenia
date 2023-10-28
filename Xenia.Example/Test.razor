@@ -4,6 +4,13 @@
 
 <h1>Hello from @(Encoding.UTF8.GetString(Request.Path))!</h1>
 
+<ul>
+	@for (var i = 0; i < 1000; i++)
+	{
+		<li @key="@i.ToString()">Person @i.ToString()</li>
+	}
+</ul>
+
 @code {
 
 	[CascadingParameter]

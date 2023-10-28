@@ -13,17 +13,13 @@ namespace Byrone.Xenia.Extensions
 
 		private static void RazorRequestHandler<T>(in Request request, ref ResponseBuilder builder) where T : IComponent
 		{
-			// @todo ResizableRentedArray
-			var renderBuffer = new RentedArray<byte>(1024);
+			var writer = new ByteArrayWriter();
 
-			using (var writer = new ByteArrayWriter(renderBuffer.Data))
-			{
-				HtmlRenderer.RenderAsync<T>(request, writer).GetAwaiter().GetResult();
+			HtmlRenderer.RenderAsync<T>(request, writer).GetAwaiter().GetResult();
 
-				builder.AppendHtml(in request, in StatusCodes.Status200OK, writer.Data);
-			}
+			builder.AppendHtml(in request, in StatusCodes.Status200OK, writer.Data);
 
-			renderBuffer.Dispose();
+			writer.Dispose();
 		}
 	}
 }

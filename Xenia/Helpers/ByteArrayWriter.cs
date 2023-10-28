@@ -1,35 +1,43 @@
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Byrone.Xenia.Helpers
 {
 	internal sealed class ByteArrayWriter : TextWriter
 	{
+		private const int initialSize = 64;
+
 		public override Encoding Encoding =>
 			Encoding.UTF8;
 
-		private readonly byte[] buffer;
-
+		private RentedArray<byte> buffer;
 		private int position;
 
-		public System.ReadOnlySpan<byte> Data =>
-			System.MemoryExtensions.AsSpan(this.buffer, 0, this.position);
+		private int Capacity =>
+			this.buffer.Size;
 
-		public ByteArrayWriter(byte[] buffer)
+		public System.ReadOnlySpan<byte> Data =>
+			this.buffer.AsSpan(0, this.position);
+
+		public ByteArrayWriter()
 		{
-			this.buffer = buffer;
+			this.buffer = new RentedArray<byte>(ByteArrayWriter.initialSize, true);
 			this.position = 0;
 		}
 
 		private System.Span<byte> Take(int length) =>
-			System.MemoryExtensions.AsSpan(this.buffer, this.position, length);
+			this.buffer.AsSpan(this.position, length);
 
 		private void Move(int length) =>
 			this.position += length;
 
 		private void Write<T>(T value) where T : unmanaged, System.IUtf8SpanFormattable
 		{
+			// @todo Performant?
+			this.EnsureAvailable(Marshal.SizeOf<T>());
+
 			var slice = this.Take(0);
 
 			if (value.TryFormat(slice, out var written, default, NumberFormatInfo.InvariantInfo))
@@ -38,11 +46,15 @@ namespace Byrone.Xenia.Helpers
 			}
 		}
 
-		public void Write(byte value) =>
+		public void Write(byte value)
+		{
+			this.EnsureAvailable(sizeof(byte));
+
 			this.buffer[this.position++] = value;
+		}
 
 		public override void Write(bool value) =>
-			this.Write(value ? 1 : 0);
+			this.Write((byte)(value ? 1 : 0));
 
 		#region Chars
 
@@ -68,6 +80,8 @@ namespace Byrone.Xenia.Helpers
 
 			var size = this.Encoding.GetByteCount(value);
 
+			this.EnsureAvailable(size);
+
 			var dst = this.Take(size);
 
 			var written = this.Encoding.GetBytes(value, dst);
@@ -83,6 +97,8 @@ namespace Byrone.Xenia.Helpers
 			}
 
 			var size = this.Encoding.GetByteCount(value);
+
+			this.EnsureAvailable(size);
 
 			var dst = this.Take(size);
 
@@ -100,6 +116,8 @@ namespace Byrone.Xenia.Helpers
 
 			var size = this.Encoding.GetByteCount(value);
 
+			this.EnsureAvailable(size);
+
 			var dst = this.Take(size);
 
 			var written = this.Encoding.GetBytes(value, dst);
@@ -116,6 +134,8 @@ namespace Byrone.Xenia.Helpers
 			{
 				return;
 			}
+
+			this.EnsureAvailable(value.Length);
 
 			var temp = new RentedArray<char>(value.Length);
 
@@ -152,5 +172,34 @@ namespace Byrone.Xenia.Helpers
 			this.Write(value);
 
 		#endregion
+
+		private void EnsureAvailable(int size)
+		{
+			if ((this.position + size) >= this.Capacity)
+			{
+				this.Resize(size);
+			}
+		}
+
+		private void Resize(int add)
+		{
+			var newBuffer = new RentedArray<byte>(this.Capacity + add, true);
+
+			this.buffer.AsSpan(0, this.position).CopyTo(newBuffer.AsSpan());
+
+			this.buffer.Dispose();
+
+			this.buffer = newBuffer;
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			if (!disposing)
+			{
+				return;
+			}
+
+			this.buffer.Dispose();
+		}
 	}
 }
