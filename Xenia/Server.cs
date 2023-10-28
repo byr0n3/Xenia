@@ -91,7 +91,7 @@ namespace Byrone.Xenia
 
 				var response = new ResponseBuilder();
 
-				if (count != 0 && !ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
+				if (count != 0 && ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
 				{
 					this.GetRequestHandler(in request).Invoke(in request, ref response);
 
