@@ -15,4 +15,14 @@
 		<ProjectReference Include="..\Xenia\Xenia.csproj"/>
 	</ItemGroup>
 
+	<ItemGroup>
+		<Compile Update="ServerTests.Post.cs">
+			<DependentUpon>ServerTests.cs</DependentUpon>
+		</Compile>
+
+		<Compile Update="ServerTests.Html.cs">
+			<DependentUpon>ServerTests.cs</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
 </Project>

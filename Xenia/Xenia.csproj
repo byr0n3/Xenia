@@ -7,7 +7,21 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Extensions\ResponseExtensions.Html.cs">
+			<DependentUpon>ResponseExtensions.cs</DependentUpon>
+		</Compile>
+
+		<Compile Update="Extensions\ResponseExtensions.Json.cs">
+			<DependentUpon>ResponseExtensions.cs</DependentUpon>
+		</Compile>
+
+		<Compile Update="Helpers\ResponseBuilder.Numerics.cs">
+			<DependentUpon>ResponseBuilder.cs</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 </Project>
