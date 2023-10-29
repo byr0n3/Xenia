@@ -77,6 +77,51 @@ namespace Xenia.Tests
 		}
 
 		[TestMethod]
+		public async Task ServerCanReturn404NotFoundAsync()
+		{
+			try
+			{
+				var response = await ServerTests.httpClient.GetAsync("/").ConfigureAwait(false);
+
+				Assert.IsTrue(response.StatusCode == HttpStatusCode.NotFound);
+
+				response.Dispose();
+			}
+			catch (HttpRequestException ex)
+			{
+				Assert.IsTrue(ex.StatusCode == HttpStatusCode.NotFound);
+			}
+		}
+
+		[TestMethod]
+		public async Task ServerCanReturn405MethodNotAllowedAsync()
+		{
+			try
+			{
+				var response = await ServerTests.httpClient.GetAsync("/post").ConfigureAwait(false);
+
+				Assert.IsTrue(response.StatusCode == HttpStatusCode.MethodNotAllowed);
+
+				response.Dispose();
+			}
+			catch (HttpRequestException ex)
+			{
+				Assert.IsTrue(ex.StatusCode == HttpStatusCode.MethodNotAllowed);
+			}
+		}
+
+		[TestMethod]
+		public async Task ServerCanResizeResponseBufferAsync()
+		{
+			var response = await ServerTests.httpClient.GetAsync("/resize").ConfigureAwait(false);
+
+			// no need to validate the response body if the status code and content type are correct
+			// server would've crashed before it could write the response if the response was too big
+
+			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
+		}
+
+		[TestMethod]
 		public async Task ServerCanReturnHtmlAsync()
 		{
 			var response = await ServerTests.httpClient.GetAsync("/test").ConfigureAwait(false);
@@ -86,6 +131,21 @@ namespace Xenia.Tests
 			var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
 			Assert.IsTrue(string.Equals(html, TestHelpers.TestHtml, System.StringComparison.Ordinal));
+
+			response.Dispose();
+		}
+
+		[TestMethod]
+		public async Task ServerCanRenderRazorPageAsync()
+		{
+			var response = await ServerTests.httpClient.GetAsync("/razor").ConfigureAwait(false);
+
+			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/html");
+
+			var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+			// @todo Stricter?
+			Assert.IsTrue(html.Contains(TestHelpers.TestRazor, System.StringComparison.Ordinal));
 
 			response.Dispose();
 		}
@@ -119,21 +179,6 @@ namespace Xenia.Tests
 		}
 
 		[TestMethod]
-		public async Task ServerCanRenderRazorPageAsync()
-		{
-			var response = await ServerTests.httpClient.GetAsync("/razor").ConfigureAwait(false);
-
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/html");
-
-			var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-			// @todo Stricter?
-			Assert.IsTrue(html.Contains(TestHelpers.TestRazor, System.StringComparison.Ordinal));
-
-			response.Dispose();
-		}
-
-		[TestMethod]
 		public async Task ServerCanParseAndReturnJsonAsync()
 		{
 			var response = await
@@ -151,37 +196,26 @@ namespace Xenia.Tests
 		}
 
 		[TestMethod]
-		public async Task ServerCanReturn404NotFoundAsync()
+		public async Task ServerCanParseMultipartFormDataAsync()
 		{
-			try
+			var person = new Person
 			{
-				var response = await ServerTests.httpClient.GetAsync("/").ConfigureAwait(false);
+				Name = "John Doe",
+				Age = 21,
+			};
 
-				Assert.IsTrue(response.StatusCode == HttpStatusCode.NotFound);
+			var requestContent = new MultipartFormDataContent();
 
-				response.Dispose();
-			}
-			catch (HttpRequestException ex)
-			{
-				Assert.IsTrue(ex.StatusCode == HttpStatusCode.NotFound);
-			}
-		}
+			requestContent.Add(new StringContent(person.Name), "name");
+			requestContent.Add(new StringContent(person.Age.ToString()), "age");
 
-		[TestMethod]
-		public async Task ServerCanReturn405MethodNotAllowedAsync()
-		{
-			try
-			{
-				var response = await ServerTests.httpClient.GetAsync("/post").ConfigureAwait(false);
+			var response = await ServerTests.httpClient.PostAsync("/post/formdata", requestContent);
 
-				Assert.IsTrue(response.StatusCode == HttpStatusCode.MethodNotAllowed);
+			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
 
-				response.Dispose();
-			}
-			catch (HttpRequestException ex)
-			{
-				Assert.IsTrue(ex.StatusCode == HttpStatusCode.MethodNotAllowed);
-			}
+			var content = await response.Content.ReadFromJsonAsync<Person>().ConfigureAwait(false);
+
+			Assert.IsTrue(content == person);
 		}
 	}
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -7,12 +8,15 @@ namespace Byrone.Xenia.Helpers
 {
 	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
+#if DEBUG
+	[DebuggerTypeProxy(typeof(ResponseBuilder.DebugView))]
+#endif
 	public partial struct ResponseBuilder : System.IDisposable
 	{
 		private RentedArray<byte> buffer;
 		private int position;
 
-		public readonly System.Span<byte> Span =>
+		public readonly System.Span<byte> Content =>
 			this.buffer.AsSpan(0, this.position);
 
 		public readonly int Capacity =>
@@ -95,5 +99,17 @@ namespace Byrone.Xenia.Helpers
 
 		public readonly void Dispose() =>
 			this.buffer.Dispose();
+
+#if DEBUG
+		private sealed class DebugView
+		{
+			public required string Content { get; init; }
+
+			public DebugView(ResponseBuilder builder)
+			{
+				this.Content = System.Text.Encoding.Latin1.GetString(builder.Content);
+			}
+		}
+#endif
 	}
 }

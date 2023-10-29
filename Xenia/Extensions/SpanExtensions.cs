@@ -62,6 +62,13 @@ namespace Byrone.Xenia.Extensions
 				length--;
 			}
 
+			// safety measure
+			if (length < 0)
+			{
+				// get the remainder of the data
+				length = @this.Length - start;
+			}
+
 			return @this.Slice(start, length);
 		}
 	}

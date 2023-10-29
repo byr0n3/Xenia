@@ -64,31 +64,36 @@ namespace Byrone.Xenia.Helpers
 				var range = ranges[i];
 
 				// empty line, next range is item content
-				if ((range.End.Value == 0) && ((i + 1) < count))
+				if ((range.End.Value <= 2) && ((i + 1) < count))
 				{
-					contentBytes = bytes.Slice(ranges[i + 1]);
+					contentBytes = bytes.SliceTrimmed(ranges[i + 1]);
 					continue;
 				}
 
 				var line = bytes.SliceTrimmed(range);
 
 				// separator, ignore
-				if (!System.MemoryExtensions.StartsWith(line, "------"u8))
+				if (System.MemoryExtensions.StartsWith(line, "--"u8))
 				{
 					continue;
 				}
 
-				var nameIdx = System.MemoryExtensions.IndexOf(line, "name=\""u8);
+				var nameIdx = System.MemoryExtensions.IndexOf(line, "name="u8);
 
 				// this line contains the name of the item
 				if (nameIdx != -1)
 				{
-					nameIdx += 6;
+					nameIdx += 5;
 
 					var nameLength = System.MemoryExtensions.IndexOf(line.Slice(nameIdx), (byte)'\\');
 
-					nameBytes = line.Slice(nameIdx, nameLength);
+					nameBytes = line.Slice(nameIdx, nameLength == -1 ? line.Length - nameIdx : nameLength);
 
+					continue;
+				}
+
+				if (nameBytes.IsEmpty || contentBytes.IsEmpty)
+				{
 					continue;
 				}
 

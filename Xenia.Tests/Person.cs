@@ -13,9 +13,9 @@ namespace Xenia.Tests
 		public static JsonTypeInfo<Person> TypeInfo =>
 			PersonSerializerContext.Default.Person;
 
-		public string Name { get; init; }
+		public required string Name { get; init; }
 
-		public int Age { get; init; }
+		public required int Age { get; init; }
 
 		public bool Equals(Person other) =>
 			string.Equals(this.Name, other.Name, System.StringComparison.Ordinal) &&

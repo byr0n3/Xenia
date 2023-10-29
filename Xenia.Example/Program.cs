@@ -72,6 +72,8 @@ namespace Byrone.Xenia.Example
 											 System.Text.Encoding.UTF8.GetString(item.Content));
 				}
 
+				data.Dispose();
+
 				builder.AppendHeaders(in StatusCodes.Status204NoContent,
 									  request.HtmlVersion,
 									  System.ReadOnlySpan<byte>.Empty,

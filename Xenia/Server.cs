@@ -44,7 +44,8 @@ namespace Byrone.Xenia
 		{
 			if (this.handlers.Contains(handler))
 			{
-				throw new System.ArgumentException("Request Handler with the same method and path already exists.", nameof(handler));
+				throw new System.ArgumentException("Request Handler with the same method and path already exists.",
+												   nameof(handler));
 			}
 
 			this.handlers.Add(handler);
@@ -103,7 +104,7 @@ namespace Byrone.Xenia
 				}
 
 				// @todo Support compression/encoding (gZip, etc)
-				stream.Write(response.Span);
+				stream.Write(response.Content);
 
 				response.Dispose();
 
