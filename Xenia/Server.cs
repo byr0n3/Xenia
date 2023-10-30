@@ -100,11 +100,12 @@ namespace Byrone.Xenia
 				}
 				else
 				{
+					request = default;
+
 					Server.WriteInternalServerError(ref response);
 				}
 
-				// @todo Support compression/encoding (gZip, etc)
-				stream.Write(response.Content);
+				Server.WriteHandler(stream, in request, response.Content);
 
 				response.Dispose();
 
@@ -117,6 +118,35 @@ namespace Byrone.Xenia
 			catch (SocketException) when (this.cancelToken.IsCancellationRequested)
 			{
 				//
+			}
+		}
+
+		private static void WriteHandler(NetworkStream stream, in Request request, System.ReadOnlySpan<byte> content)
+		{
+			if (!request.TryGetHeader(Headers.AcceptEncoding, out var acceptEncoding) ||
+				!ServerHelpers.TryGetValidEncoding(acceptEncoding.Value, out var encoding))
+			{
+				stream.Write(content);
+				return;
+			}
+
+			// @todo Implement encodings
+			switch (encoding)
+			{
+				case ResponseEncoding.GZip:
+					stream.Write(content);
+					break;
+
+				case ResponseEncoding.Deflate:
+					stream.Write(content);
+					break;
+
+				case ResponseEncoding.Brotli:
+					stream.Write(content);
+					break;
+
+				default:
+					throw new System.NotSupportedException("Unsupported encoding: " + encoding);
 			}
 		}
 

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Byrone.Xenia.Helpers;
 using JetBrains.Annotations;
@@ -6,6 +7,9 @@ namespace Byrone.Xenia.Data
 {
 	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
+#if DEBUG
+	[DebuggerTypeProxy(typeof(RequestHeader.DebugView))]
+#endif
 	public readonly struct RequestHeader : System.IEquatable<RequestHeader>
 	{
 		public SpanPointer<byte> Key { get; }
@@ -32,5 +36,22 @@ namespace Byrone.Xenia.Data
 
 		public static bool operator !=(RequestHeader left, RequestHeader right) =>
 			!left.Equals(right);
+
+#if DEBUG
+		private sealed class DebugView
+		{
+			private static readonly System.Text.Encoding encoding = System.Text.Encoding.Latin1;
+
+			public required string Key { get; init; }
+
+			public required string Value { get; init; }
+
+			public DebugView(RequestHeader header)
+			{
+				this.Key = DebugView.encoding.GetString(header.Key);
+				this.Value = DebugView.encoding.GetString(header.Value);
+			}
+		}
+#endif
 	}
 }

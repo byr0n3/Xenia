@@ -141,7 +141,6 @@ namespace Byrone.Xenia.Helpers
 			return count;
 		}
 
-		// @todo Refactor
 		private static HttpMethod GetMethod(Bytes bytes)
 		{
 			if (System.MemoryExtensions.SequenceEqual(bytes, "GET"u8))
@@ -180,6 +179,78 @@ namespace Byrone.Xenia.Helpers
 			}
 
 			return HttpMethod.None;
+		}
+
+		// header can contain multiple accepted encodings, find the first supported one
+		public static bool TryGetValidEncoding(Bytes value, out ResponseEncoding @out)
+		{
+			if (value.IsEmpty)
+			{
+				@out = default;
+				return false;
+			}
+
+			var ranges = new RentedArray<System.Range>(3);
+
+			var count = value.Split(ranges.Data, Characters.Comma);
+
+			if (count == 0)
+			{
+				ranges.Dispose();
+
+				@out = ServerHelpers.GetEncoding(value);
+				return @out == ResponseEncoding.None;
+			}
+
+			for (var i = 0; i < count; i++)
+			{
+				var range = ranges[i];
+
+				@out = ServerHelpers.GetEncoding(value.Slice(range));
+
+				if (@out == ResponseEncoding.None)
+				{
+					continue;
+				}
+
+				ranges.Dispose();
+				return true;
+			}
+
+			ranges.Dispose();
+
+			@out = ResponseEncoding.None;
+			return false;
+		}
+
+		private static ResponseEncoding GetEncoding(Bytes value)
+		{
+			// handle `br;q=1.0, gzip;q=0.8, *;q=0.1`, we don't care about the quality value behind the semi colon
+			// it's probably in the correct order anyway
+			var idx = System.MemoryExtensions.IndexOf(value, Characters.SemiColon);
+
+			if (idx != -1)
+			{
+				value = value.Slice(0, idx);
+			}
+
+			if (System.MemoryExtensions.SequenceEqual(value, "gzip"u8))
+			{
+				return ResponseEncoding.GZip;
+			}
+
+			if (System.MemoryExtensions.SequenceEqual(value, "deflate"u8))
+			{
+				return ResponseEncoding.Deflate;
+			}
+
+			if (System.MemoryExtensions.SequenceEqual(value, "br"u8) ||
+				System.MemoryExtensions.SequenceEqual(value, "brotli"u8))
+			{
+				return ResponseEncoding.Brotli;
+			}
+
+			return ResponseEncoding.None;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
