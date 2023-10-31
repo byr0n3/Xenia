@@ -70,14 +70,8 @@ namespace Byrone.Xenia
 				var client = this.listener.AcceptTcpClient();
 				var stream = client.GetStream();
 
-				if (!stream.CanRead)
-				{
-					this.Logger?.LogWarning("Received an unreadable stream");
-
-					client.Dispose();
-
-					return;
-				}
+				Debug.Assert(stream.CanRead);
+				Debug.Assert(stream.CanWrite);
 
 				// @todo ResizableRentedArray
 				var buffer = new RentedArray<byte>(Server.bufferSize);
@@ -98,8 +92,6 @@ namespace Byrone.Xenia
 				if (ServerHelpers.TryGetRequest(this.options, bytes, ranges.AsSpan(0, count), out var request))
 				{
 					this.GetRequestHandler(in request).Invoke(in request, ref response);
-
-					request.Dispose();
 				}
 				else
 				{
@@ -110,6 +102,8 @@ namespace Byrone.Xenia
 
 				this.WriteHandler(stream, in request, response);
 
+				request.Dispose();
+
 				response.Dispose();
 
 				ranges.Dispose();
@@ -118,59 +112,50 @@ namespace Byrone.Xenia
 
 				client.Dispose();
 			}
+			// exception gets thrown if we cancel the cancellationtoken, no need to log
 			catch (SocketException) when (this.cancelToken.IsCancellationRequested)
 			{
 				//
 			}
+			catch (System.Exception ex)
+			{
+				this.Logger?.LogException(ex, "Exception thrown while handling client");
+			}
 		}
 
-		private void WriteHandler(NetworkStream stream, in Request request, ResponseBuilder response)
+		private void WriteHandler(NetworkStream networkStream, in Request request, ResponseBuilder response)
 		{
 			var supported = this.options.SupportedCompression;
 
 			if (supported == CompressionMethod.None)
 			{
-				stream.Write(response.Content);
+				networkStream.Write(response.Content);
 				return;
 			}
 
 			if (!request.TryGetHeader(Headers.AcceptEncoding, out var acceptEncoding) ||
 				!ServerHelpers.TryGetValidCompressionMode(acceptEncoding.Value, supported, out var compression))
 			{
-				stream.Write(response.Content);
+				networkStream.Write(response.Content);
 				return;
 			}
 
-			switch (compression)
+			try
 			{
-				case CompressionMethod.None:
+				var stream = Compression.GetWriteStream(networkStream, compression);
+
+				networkStream.Write(response.GetHeaders());
+				stream.Write(response.GetContent());
+
+				// we dispose the actual network stream in the TCP client
+				if (compression != CompressionMethod.None)
 				{
-					stream.Write(response.Content);
-					break;
+					stream.Dispose();
 				}
-
-				case CompressionMethod.GZip:
-				{
-					stream.Write(response.GetHeaders());
-					Compression.GZip(stream, response.GetContent());
-
-					return;
-				}
-
-				case CompressionMethod.Deflate:
-				{
-					stream.Write(response.GetHeaders());
-					Compression.Deflate(stream, response.GetContent());
-
-					return;
-				}
-
-				// @todo
-				case CompressionMethod.Brotli:
-					throw new System.NotImplementedException();
-
-				default:
-					throw new System.NotSupportedException("Unsupported compression mode: " + compression);
+			}
+			catch (SocketException ex)
+			{
+				this.Logger?.LogException(ex, "Exception writing response to stream");
 			}
 		}
 

@@ -1,5 +1,8 @@
+using JetBrains.Annotations;
+
 namespace Byrone.Xenia
 {
+	[PublicAPI]
 	public interface IServerLogger
 	{
 		public void LogInfo(string message);

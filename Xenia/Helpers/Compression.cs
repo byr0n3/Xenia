@@ -1,25 +1,22 @@
+using System.IO;
 using System.IO.Compression;
-using System.Net.Sockets;
-using Bytes = System.ReadOnlySpan<byte>;
+using Byrone.Xenia.Data;
 
 namespace Byrone.Xenia.Helpers
 {
 	internal static class Compression
 	{
-		public static void GZip(NetworkStream stream, Bytes bytes)
+		public static Stream GetWriteStream(Stream stream,
+											CompressionMethod compression,
+											CompressionLevel level = CompressionLevel.Optimal)
 		{
-			using (var compressor = new GZipStream(stream, CompressionLevel.Optimal, true))
+			return compression switch
 			{
-				compressor.Write(bytes);
-			}
-		}
-
-		public static void Deflate(NetworkStream stream, Bytes bytes)
-		{
-			using (var compressor = new DeflateStream(stream, CompressionLevel.Optimal, true))
-			{
-				compressor.Write(bytes);
-			}
+				CompressionMethod.GZip    => new GZipStream(stream, level, true),
+				CompressionMethod.Deflate => new DeflateStream(stream, level, true),
+				CompressionMethod.Brotli  => new BrotliStream(stream, level, true),
+				_                         => stream,
+			};
 		}
 	}
 }

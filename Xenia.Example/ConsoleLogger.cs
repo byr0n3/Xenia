@@ -11,7 +11,10 @@ namespace Byrone.Xenia.Example
 		public void LogError(string message) =>
 			System.Console.WriteLine(message);
 
-		public void LogException(System.Exception ex, string message) =>
-			throw ex;
+		public void LogException(System.Exception ex, string message)
+		{
+			System.Console.Error.WriteLine("[Server] " + message);
+			System.Console.Error.WriteLine(ex);
+		}
 	}
 }
