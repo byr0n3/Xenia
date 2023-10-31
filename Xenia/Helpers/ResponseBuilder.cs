@@ -22,6 +22,8 @@ namespace Byrone.Xenia.Helpers
 		public readonly int Capacity =>
 			this.buffer.Size;
 
+		public int ContentStart { get; private set; }
+
 		public ResponseBuilder() : this(1024)
 		{
 		}
@@ -33,8 +35,29 @@ namespace Byrone.Xenia.Helpers
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void StartContent()
+		{
+			if (this.ContentStart == 0)
+			{
+				this.ContentStart = this.position;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly System.Span<byte> GetHeaders() =>
+			this.Take(0, this.ContentStart);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly System.Span<byte> GetContent() =>
+			this.buffer.AsSpan(this.ContentStart, this.position - this.ContentStart);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly System.Span<byte> Take(int size) =>
-			this.buffer.AsSpan(this.position, size);
+			this.Take(this.position, size);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly System.Span<byte> Take(int start, int size) =>
+			this.buffer.AsSpan(start, size);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Move(int length) =>

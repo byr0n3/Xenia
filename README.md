@@ -13,12 +13,8 @@ internal static class Program
 {
     public static void Main(string[] args)
     {
-        var options = new ServerOptions
-        {
-            IpAddress = "0.0.0.0", // IP address to bind to. In most cases, you'll want this to be '0.0.0.0'/'localhost'
-            Port = 80, // Port to bind to. The default HTTP port is 80
-        };
-           
+        var options = new ServerOptions("0.0.0.0", 80);
+  
         // Optionally, you can give the server an instance of a `CancellationToken`. 
         var server = new Server(options);
 
@@ -50,7 +46,7 @@ the response.
 
 ### `Test.razor`
 
-```cshtml
+```razor
 @using System.Text
 @using Byrone.Xenia.Data
 
@@ -72,11 +68,7 @@ internal static class Program
 {
     public static void Main(string[] args)
     {
-        var options = new ServerOptions
-        {
-            IpAddress = "0.0.0.0",
-            Port = 80,
-        };
+        var options = new ServerOptions("0.0.0.0", 80);
  
         var server = new Server(options);
 
@@ -103,7 +95,7 @@ JSON data of the given model to the response, with the appropriate headers.
 
 ```csharp
 // In this example, we define a JsonSerializerContext in the same file as the model.
-// However, you could define 1 global JsonSerializerContext and allow it to serialize multiple differnt data models.
+// However, you could define 1 global JsonSerializerContext and allow it to serialize multiple different data models.
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(Person))]
 internal sealed partial class PersonSerializerContext : JsonSerializerContext;
@@ -127,11 +119,7 @@ internal static class Program
 {
     public static void Main(string[] args)
     {
-        var options = new ServerOptions
-        {
-            IpAddress = "0.0.0.0",
-            Port = 80,
-        };
+        var options = new ServerOptions("0.0.0.0", 80);
 
         var server = new Server(options);
 
@@ -152,6 +140,38 @@ internal static class Program
 
         // Write the serialized data model to the response, with the correct headers.
         response.AppendJson(in request, in StatusCodes.Status200OK, person);
+    }
+}
+```
+
+### Response compression
+
+Xenia supports built-in support for GZip and Deflate compression (with Brotli support coming soon). Response compression
+is enabled by default. You can customize this behavior by adding `CompressionMethod` flags to the `ServerOptions`
+constructor. Let's use the [Rendering Razor pages](#rendering-razor-pages) and customize the compression behavior.
+
+```csharp
+internal static class Program
+{
+    public static void Main(string[] args)
+    {
+        // Disable compression
+        var compression = CompressionMethod.None;
+
+        // Only support GZip compression
+        var compression = CompressionMethod.GZip;
+
+        // Only support Brotli & GZip compression
+        var compression = CompressionMethod.Brotli & CompressionMethod.GZip;
+        
+        var options = new ServerOptions("0.0.0.0", 80, compression);
+ 
+        var server = new Server(options);
+
+        server.AddRazorPage<Test>("/"u8);
+
+        var thread = new Thread(server.Listen);
+        thread.Start();
     }
 }
 ```

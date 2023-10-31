@@ -11,6 +11,7 @@ namespace Byrone.Xenia.Extensions
 		public static void AddRazorPage<T>(this Server server, System.ReadOnlySpan<byte> path) where T : IComponent =>
 			server.AddRequestHandler(new RequestHandler(path, ServerExtensions.RazorRequestHandler<T>));
 
+		// @todo Strip new lines/empty lines?
 		private static void RazorRequestHandler<T>(in Request request, ref ResponseBuilder builder) where T : IComponent
 		{
 			var writer = new ByteArrayWriter();

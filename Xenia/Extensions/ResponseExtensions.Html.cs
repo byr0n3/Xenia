@@ -7,15 +7,8 @@ namespace Byrone.Xenia.Extensions
 	public static partial class ResponseExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void AppendHtmlHeaders(this ref ResponseBuilder @this,
-											 in Request request,
-											 in StatusCode code,
-											 int contentLength) =>
-			@this.AppendHeaders(in code,
-								request.HtmlVersion,
-								System.ReadOnlySpan<byte>.Empty,
-								ContentTypes.Html,
-								contentLength);
+		public static void AppendHtmlHeaders(this ref ResponseBuilder @this, in Request request, in StatusCode code) =>
+			@this.AppendHeaders(in request, in code, ContentTypes.Html);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void AppendHtml(this ref ResponseBuilder @this,
@@ -23,7 +16,7 @@ namespace Byrone.Xenia.Extensions
 									  in StatusCode code,
 									  System.ReadOnlySpan<char> html)
 		{
-			@this.AppendHtmlHeaders(in request, in code, ResponseExtensions.enc.GetByteCount(html));
+			@this.AppendHtmlHeaders(in request, in code);
 
 			@this.Append(html);
 		}
@@ -34,7 +27,7 @@ namespace Byrone.Xenia.Extensions
 									  in StatusCode code,
 									  System.ReadOnlySpan<byte> html)
 		{
-			@this.AppendHtmlHeaders(in request, in code, html.Length);
+			@this.AppendHtmlHeaders(in request, in code);
 
 			@this.Append(html);
 		}

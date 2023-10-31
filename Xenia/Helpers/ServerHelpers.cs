@@ -8,7 +8,7 @@ namespace Byrone.Xenia.Helpers
 {
 	internal static class ServerHelpers
 	{
-		public static bool TryGetRequest(Bytes bytes, Ranges ranges, out Request request)
+		public static bool TryGetRequest(ServerOptions options, Bytes bytes, Ranges ranges, out Request request)
 		{
 			if (!ServerHelpers.TryGetHtmlCommand(bytes, ranges, out var command))
 			{
@@ -28,6 +28,7 @@ namespace Byrone.Xenia.Helpers
 				HeaderData = headers,
 				HeaderCount = headerCount,
 				Body = ServerHelpers.GetRequestBody(command.Method, bytes, ranges),
+				SupportedCompression = options.SupportedCompression,
 			};
 
 			return true;
@@ -182,7 +183,9 @@ namespace Byrone.Xenia.Helpers
 		}
 
 		// header can contain multiple accepted encodings, find the first supported one
-		public static bool TryGetValidEncoding(Bytes value, out ResponseEncoding @out)
+		public static bool TryGetValidCompressionMode(Bytes value,
+													  CompressionMethod supported,
+													  out CompressionMethod @out)
 		{
 			if (value.IsEmpty)
 			{
@@ -198,17 +201,26 @@ namespace Byrone.Xenia.Helpers
 			{
 				ranges.Dispose();
 
-				@out = ServerHelpers.GetEncoding(value);
-				return @out == ResponseEncoding.None;
+				@out = ServerHelpers.GetCompressionMode(value);
+				return @out != CompressionMethod.None;
 			}
 
 			for (var i = 0; i < count; i++)
 			{
 				var range = ranges[i];
+				var start = range.Start.Value;
+				var length = range.End.Value;
 
-				@out = ServerHelpers.GetEncoding(value.Slice(range));
+				// trim space at the start
+				if (i > 0)
+				{
+					start++;
+					length--;
+				}
 
-				if (@out == ResponseEncoding.None)
+				@out = ServerHelpers.GetCompressionMode(value.Slice(start, length));
+
+				if (@out == CompressionMethod.None || (supported & @out) == CompressionMethod.None)
 				{
 					continue;
 				}
@@ -219,11 +231,11 @@ namespace Byrone.Xenia.Helpers
 
 			ranges.Dispose();
 
-			@out = ResponseEncoding.None;
+			@out = CompressionMethod.None;
 			return false;
 		}
 
-		private static ResponseEncoding GetEncoding(Bytes value)
+		private static CompressionMethod GetCompressionMode(Bytes value)
 		{
 			// handle `br;q=1.0, gzip;q=0.8, *;q=0.1`, we don't care about the quality value behind the semi colon
 			// it's probably in the correct order anyway
@@ -236,21 +248,21 @@ namespace Byrone.Xenia.Helpers
 
 			if (System.MemoryExtensions.SequenceEqual(value, "gzip"u8))
 			{
-				return ResponseEncoding.GZip;
+				return CompressionMethod.GZip;
 			}
 
 			if (System.MemoryExtensions.SequenceEqual(value, "deflate"u8))
 			{
-				return ResponseEncoding.Deflate;
+				return CompressionMethod.Deflate;
 			}
 
 			if (System.MemoryExtensions.SequenceEqual(value, "br"u8) ||
 				System.MemoryExtensions.SequenceEqual(value, "brotli"u8))
 			{
-				return ResponseEncoding.Brotli;
+				return CompressionMethod.Brotli;
 			}
 
-			return ResponseEncoding.None;
+			return CompressionMethod.None;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]

@@ -12,12 +12,7 @@ namespace Byrone.Xenia.Example
 		{
 			var cancelTokenSource = new CancellationTokenSource();
 
-			var options = new ServerOptions
-			{
-				IpAddress = "0.0.0.0",
-				Port = 6969,
-				Logger = new ConsoleLogger(),
-			};
+			var options = new ServerOptions("0.0.0.0", 6969, new ConsoleLogger());
 
 			var server = new Server(options, cancelTokenSource.Token);
 
@@ -47,17 +42,15 @@ namespace Byrone.Xenia.Example
 
 			var jsonSize = Encoding.UTF8.GetByteCount(json);
 
-			response.AppendHeaders(in StatusCodes.Status200OK,
-								   request.HtmlVersion,
-								   System.ReadOnlySpan<byte>.Empty,
-								   ContentTypes.Json,
-								   jsonSize);
+			response.AppendHeaders(in request, in StatusCodes.Status200OK, ContentTypes.Json);
 
 			var span = response.Take(jsonSize);
 
 			var written = Encoding.UTF8.GetBytes(json, span);
 
 			response.Move(written);
+
+			var a = System.Text.Encoding.UTF8.GetString(response.GetContent());
 		}
 
 		private static void PostHandler(in Request request, ref ResponseBuilder builder)
@@ -74,11 +67,9 @@ namespace Byrone.Xenia.Example
 
 				data.Dispose();
 
-				builder.AppendHeaders(in StatusCodes.Status204NoContent,
-									  request.HtmlVersion,
-									  System.ReadOnlySpan<byte>.Empty,
-									  System.ReadOnlySpan<byte>.Empty,
-									  0);
+				builder.AppendHeaders(in request,
+									  in StatusCodes.Status204NoContent,
+									  System.ReadOnlySpan<byte>.Empty);
 				return;
 			}
 
@@ -88,22 +79,16 @@ namespace Byrone.Xenia.Example
 				return;
 			}
 
-			builder.AppendHeaders(in StatusCodes.Status500InternalServerError,
-								  request.HtmlVersion,
-								  System.ReadOnlySpan<byte>.Empty,
-								  System.ReadOnlySpan<byte>.Empty,
-								  0);
+			builder.AppendHeaders(in request,
+								  in StatusCodes.Status500InternalServerError,
+								  System.ReadOnlySpan<byte>.Empty);
 		}
 
 		private static void ResizeHandler(in Request request, ref ResponseBuilder builder)
 		{
 			const int size = 10000;
 
-			builder.AppendHeaders(in StatusCodes.Status200OK,
-								  request.HtmlVersion,
-								  System.ReadOnlySpan<byte>.Empty,
-								  ContentTypes.Json,
-								  0);
+			builder.AppendHeaders(in request, in StatusCodes.Status200OK, ContentTypes.Json);
 
 			builder.Append('[');
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -90,9 +91,11 @@ namespace Byrone.Xenia
 
 				var count = bytes.Split(ranges.Data, Characters.NewLine);
 
+				Debug.Assert(count != 0);
+
 				var response = new ResponseBuilder();
 
-				if (count != 0 && ServerHelpers.TryGetRequest(bytes, ranges.AsSpan(0, count), out var request))
+				if (ServerHelpers.TryGetRequest(this.options, bytes, ranges.AsSpan(0, count), out var request))
 				{
 					this.GetRequestHandler(in request).Invoke(in request, ref response);
 
@@ -105,7 +108,7 @@ namespace Byrone.Xenia
 					Server.WriteInternalServerError(ref response);
 				}
 
-				Server.WriteHandler(stream, in request, response.Content);
+				this.WriteHandler(stream, in request, response);
 
 				response.Dispose();
 
@@ -121,32 +124,53 @@ namespace Byrone.Xenia
 			}
 		}
 
-		private static void WriteHandler(NetworkStream stream, in Request request, System.ReadOnlySpan<byte> content)
+		private void WriteHandler(NetworkStream stream, in Request request, ResponseBuilder response)
 		{
-			if (!request.TryGetHeader(Headers.AcceptEncoding, out var acceptEncoding) ||
-				!ServerHelpers.TryGetValidEncoding(acceptEncoding.Value, out var encoding))
+			var supported = this.options.SupportedCompression;
+
+			if (supported == CompressionMethod.None)
 			{
-				stream.Write(content);
+				stream.Write(response.Content);
 				return;
 			}
 
-			// @todo Implement encodings
-			switch (encoding)
+			if (!request.TryGetHeader(Headers.AcceptEncoding, out var acceptEncoding) ||
+				!ServerHelpers.TryGetValidCompressionMode(acceptEncoding.Value, supported, out var compression))
 			{
-				case ResponseEncoding.GZip:
-					stream.Write(content);
-					break;
+				stream.Write(response.Content);
+				return;
+			}
 
-				case ResponseEncoding.Deflate:
-					stream.Write(content);
+			switch (compression)
+			{
+				case CompressionMethod.None:
+				{
+					stream.Write(response.Content);
 					break;
+				}
 
-				case ResponseEncoding.Brotli:
-					stream.Write(content);
-					break;
+				case CompressionMethod.GZip:
+				{
+					stream.Write(response.GetHeaders());
+					Compression.GZip(stream, response.GetContent());
+
+					return;
+				}
+
+				case CompressionMethod.Deflate:
+				{
+					stream.Write(response.GetHeaders());
+					Compression.Deflate(stream, response.GetContent());
+
+					return;
+				}
+
+				// @todo
+				case CompressionMethod.Brotli:
+					throw new System.NotImplementedException();
 
 				default:
-					throw new System.NotSupportedException("Unsupported encoding: " + encoding);
+					throw new System.NotSupportedException("Unsupported compression mode: " + compression);
 			}
 		}
 

@@ -27,11 +27,23 @@ namespace Byrone.Xenia.Extensions
 		}
 
 		public static void AppendHeaders(this ref ResponseBuilder @this,
+										 in Request request,
+										 in StatusCode code,
+										 System.ReadOnlySpan<byte> contentType,
+										 int contentLength = 0) =>
+			ResponseExtensions.AppendHeaders(ref @this,
+											 in code,
+											 request.HtmlVersion,
+											 request.GetCompressionMethodHeader(),
+											 contentType,
+											 contentLength);
+
+		public static void AppendHeaders(this ref ResponseBuilder @this,
 										 in StatusCode code,
 										 System.ReadOnlySpan<byte> htmlVersion,
 										 System.ReadOnlySpan<byte> contentEncoding,
 										 System.ReadOnlySpan<byte> contentType,
-										 int contentLength)
+										 int contentLength = 0)
 		{
 			// HTML spec
 
@@ -84,6 +96,7 @@ namespace Byrone.Xenia.Extensions
 			}
 
 			@this.AppendLineEnd();
+			@this.StartContent();
 		}
 	}
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
@@ -12,5 +13,24 @@ namespace Byrone.Xenia.Data
 		public required int Port { get; init; }
 
 		public IServerLogger? Logger { get; init; }
+
+		public CompressionMethod SupportedCompression { get; init; }
+
+		[SetsRequiredMembers]
+		public ServerOptions(string ip, int port, CompressionMethod compression) : this(ip, port, null, compression)
+		{
+		}
+
+		[SetsRequiredMembers]
+		public ServerOptions(string ip,
+							 int port,
+							 IServerLogger? logger = null,
+							 CompressionMethod compression = CompressionMethod.All)
+		{
+			this.IpAddress = ip;
+			this.Port = port;
+			this.Logger = logger;
+			this.SupportedCompression = compression;
+		}
 	}
 }

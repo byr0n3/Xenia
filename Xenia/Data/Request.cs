@@ -28,6 +28,8 @@ namespace Byrone.Xenia.Data
 		public System.ReadOnlySpan<RequestHeader> Headers =>
 			this.HeaderData.AsSpan(0, this.HeaderCount);
 
+		public required CompressionMethod SupportedCompression { get; init; }
+
 		public void Dispose() =>
 			this.HeaderData.Dispose();
 
@@ -41,6 +43,7 @@ namespace Byrone.Xenia.Data
 			public readonly string HtmlVersion;
 			public readonly Dictionary<string, string> Headers;
 			public readonly string? Body;
+			public readonly CompressionMethod SupportedCompression;
 
 			public DebugView(Request request)
 			{
@@ -62,6 +65,8 @@ namespace Byrone.Xenia.Data
 				{
 					this.Body = DebugView.encoding.GetString(request.Body);
 				}
+
+				this.SupportedCompression = request.SupportedCompression;
 			}
 		}
 #endif

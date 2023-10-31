@@ -7,6 +7,21 @@ namespace Byrone.Xenia.Extensions
 	public static partial class ResponseExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void AppendJson(this ref ResponseBuilder @this,
+									  in Request request,
+									  in StatusCode code,
+									  System.ReadOnlySpan<byte> bytes)
+		{
+			@this.AppendHeaders(in code,
+								request.HtmlVersion,
+								request.GetCompressionMethodHeader(),
+								ContentTypes.Json,
+								bytes.Length);
+
+			@this.Append(bytes);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void AppendJson<T>(this ref ResponseBuilder @this,
 										 in Request request,
 										 in StatusCode code,
@@ -15,21 +30,6 @@ namespace Byrone.Xenia.Extensions
 			var bytes = Json.Serialize(data);
 
 			ResponseExtensions.AppendJson(ref @this, in request, in code, bytes);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void AppendJson(this ref ResponseBuilder @this,
-									  in Request request,
-									  in StatusCode code,
-									  System.ReadOnlySpan<byte> bytes)
-		{
-			@this.AppendHeaders(in code,
-								request.HtmlVersion,
-								System.ReadOnlySpan<byte>.Empty,
-								ContentTypes.Json,
-								bytes.Length);
-
-			@this.Append(bytes);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
