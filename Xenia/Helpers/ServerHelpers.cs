@@ -34,12 +34,11 @@ namespace Byrone.Xenia.Helpers
 			return true;
 		}
 
+		// the first line of the request contains the HTML command, example:
+		// GET / HTTP/1.1
 		private static bool TryGetHtmlCommand(Bytes bytes, Ranges ranges, out HtmlCommand command)
 		{
 			const byte space = (byte)' ';
-
-			// the first line of the request contains the HTML command, example:
-			// GET / HTTP/1.1
 
 			var line = bytes.Slice(ranges[0]);
 			var methodIdx = System.MemoryExtensions.IndexOf(line, space);
@@ -110,6 +109,7 @@ namespace Byrone.Xenia.Helpers
 
 			var count = 0;
 
+			// start at 1 to skip the HTML command
 			for (var i = 1; i < ranges.Length - 1; i++)
 			{
 				var range = ranges[i];

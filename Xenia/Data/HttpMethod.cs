@@ -8,10 +8,11 @@ namespace Byrone.Xenia.Data
 		None = 0,
 		Get,
 		Post,
-		Head,
 		Put,
 		Delete,
 		Patch,
+
+		Head,
 		Options,
 	}
 }

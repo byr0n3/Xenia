@@ -125,6 +125,12 @@ namespace Byrone.Xenia
 
 		private void WriteHandler(NetworkStream networkStream, in Request request, ResponseBuilder response)
 		{
+			if (request.Method is HttpMethod.Head or HttpMethod.Options)
+			{
+				networkStream.Write(response.GetHeaders());
+				return;
+			}
+
 			var supported = this.options.SupportedCompression;
 
 			if (supported == CompressionMethod.None)
@@ -168,7 +174,10 @@ namespace Byrone.Xenia
 					continue;
 				}
 
-				if (handler.Method != request.Method)
+				// OPTIONS & HEAD can ignore the handler's method
+				if (request.Method != HttpMethod.Head &&
+					request.Method != HttpMethod.Options &&
+					handler.Method != request.Method)
 				{
 					return Server.WriteMethodNotAllowed;
 				}
