@@ -187,7 +187,7 @@ internal static class Program
 
 ### Response compression
 
-Xenia supports built-in support for GZip and Deflate compression (with Brotli support coming soon). Response compression
+Xenia supports built-in support for GZip, Deflate and Brotli compression. Response compression
 is enabled by default. You can customize this behavior by adding `CompressionMethod` flags to the `ServerOptions`
 constructor. Let's use the [Rendering Razor pages](#rendering-razor-pages) example and customize the compression
 behavior.
