@@ -12,5 +12,11 @@ namespace Byrone.Xenia.Helpers
 		public const byte Comma = (byte)',';
 
 		public const byte SemiColon = (byte)';';
+
+		public const byte QuestionMark = (byte)'?';
+
+		public const byte Ampersand = (byte)'&';
+
+		public const byte Equals = (byte)'=';
 	}
 }

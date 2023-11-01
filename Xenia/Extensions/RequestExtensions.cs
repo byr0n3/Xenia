@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Byrone.Xenia.Data;
 using Byrone.Xenia.Helpers;
 using JetBrains.Annotations;
@@ -8,11 +7,11 @@ namespace Byrone.Xenia.Extensions
 	[PublicAPI]
 	public static class RequestExtensions
 	{
-		public static bool TryGetHeader(in this Request @this, System.ReadOnlySpan<byte> key, out RequestHeader header)
+		public static bool TryGetHeader(in this Request @this, System.ReadOnlySpan<byte> key, out KeyValue header)
 		{
 			foreach (var head in @this.Headers)
 			{
-				if (!System.MemoryExtensions.SequenceEqual(head.Key, key))
+				if (!head.Key.Equals(key))
 				{
 					continue;
 				}
@@ -25,12 +24,11 @@ namespace Byrone.Xenia.Extensions
 			return false;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static CompressionMethod GetCompressionMethod(in this Request @this)
 		{
 			var supported = @this.SupportedCompression;
 
-			if (@this.TryGetHeader(Headers.AcceptEncoding, out var acceptEncoding) &&
+			if (RequestExtensions.TryGetHeader(in @this, Headers.AcceptEncoding, out var acceptEncoding) &&
 				ServerHelpers.TryGetValidCompressionMode(acceptEncoding.Value, supported, out var compression))
 			{
 				return compression;
@@ -39,7 +37,6 @@ namespace Byrone.Xenia.Extensions
 			return CompressionMethod.None;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static System.ReadOnlySpan<byte> GetCompressionMethodHeader(in this Request @this)
 		{
 			var method = RequestExtensions.GetCompressionMethod(in @this);

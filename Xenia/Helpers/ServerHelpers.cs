@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Runtime.InteropServices;
 using Byrone.Xenia.Data;
 using Byrone.Xenia.Extensions;
@@ -17,16 +18,21 @@ namespace Byrone.Xenia.Helpers
 			}
 
 			// skip the html command
-			var headers = new RentedArray<RequestHeader>(ranges.Length - 1);
+			var headers = new RentedArray<KeyValue>(ranges.Length - 1);
 			var headerCount = ServerHelpers.ParseHeaders(bytes, ranges, ref headers);
+
+			// important: DON'T DISPOSE THE HEADERS VARIABLE!
+			// we pass the rented array to a new instance down below
 
 			request = new Request
 			{
 				Method = command.Method,
 				Path = command.Path,
+				Query = command.Query,
 				HtmlVersion = command.Html,
-				HeaderData = headers,
-				HeaderCount = headerCount,
+				// bit of a hack, used to redefine the 'size' property of the RentedArray instance
+				// otherwise we'd have to also define something like 'HeadersCount' in the request
+				Headers = new RentedArray<KeyValue>(headers.Data, ArrayPool<KeyValue>.Shared, headerCount),
 				Body = ServerHelpers.GetRequestBody(command.Method, bytes, ranges),
 				SupportedCompression = options.SupportedCompression,
 			};
@@ -60,6 +66,15 @@ namespace Byrone.Xenia.Helpers
 			}
 
 			var path = line.Slice(methodIdx + 1, pathIdx);
+			var query = Bytes.Empty;
+
+			var queryIdx = System.MemoryExtensions.IndexOf(path, Characters.QuestionMark);
+
+			if (queryIdx != -1)
+			{
+				query = path.Slice(queryIdx + 1);
+				path = path.Slice(0, queryIdx);
+			}
 
 			var htmlIdx = methodIdx + pathIdx + 2;
 
@@ -69,6 +84,7 @@ namespace Byrone.Xenia.Helpers
 			{
 				Method = method,
 				Path = path,
+				Query = query,
 				Html = html,
 			};
 
@@ -102,7 +118,7 @@ namespace Byrone.Xenia.Helpers
 			return newLineIdx == 0 ? Bytes.Empty : bytes.Slice(ranges[newLineIdx].Start.Value);
 		}
 
-		private static int ParseHeaders(Bytes bytes, Ranges ranges, ref RentedArray<RequestHeader> headers)
+		private static int ParseHeaders(Bytes bytes, Ranges ranges, ref RentedArray<KeyValue> headers)
 		{
 			const byte semiColon = (byte)':';
 			const int valueOffset = sizeof(byte) * 2;
@@ -136,7 +152,7 @@ namespace Byrone.Xenia.Helpers
 				var valueIdx = separatorIdx + valueOffset;
 				var value = slice.SliceTrimmed(valueIdx, slice.Length - (valueIdx));
 
-				headers[count++] = new RequestHeader(key, value);
+				headers[count++] = new KeyValue(key, value);
 			}
 
 			return count;
@@ -271,6 +287,8 @@ namespace Byrone.Xenia.Helpers
 			public required HttpMethod Method { get; init; }
 
 			public required SpanPointer<byte> Path { get; init; }
+
+			public required SpanPointer<byte> Query { get; init; }
 
 			public required SpanPointer<byte> Html { get; init; }
 		}

@@ -1,13 +1,14 @@
 using System.Buffers;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Byrone.Xenia.Internal;
 using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Helpers
 {
 	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct RentedArray<T> : System.IDisposable
+	public readonly struct RentedArray<T> : IEnumerable<RentedArray<T>.Enumerator, T>, System.IDisposable
+		where T : unmanaged
 	{
 		public readonly int Size;
 
@@ -29,14 +30,20 @@ namespace Byrone.Xenia.Helpers
 		{
 		}
 
+		public RentedArray(T[] data, ArrayPool<T> pool, int count = 0)
+		{
+			this.pool = pool;
+
+			this.Data = data;
+			this.Size = count == 0 ? data.Length : count;
+		}
+
 		public RentedArray(int baseSize, ArrayPool<T> pool, bool useArrayLength = false)
 		{
 			this.pool = pool;
 
 			this.Data = this.pool.Rent(baseSize);
 			this.Size = useArrayLength ? this.Data.Length : baseSize;
-
-			Debug.Assert(this.Data.Length >= this.Size);
 		}
 
 		public System.Span<T> AsSpan(int start = 0, int size = 0)
@@ -53,5 +60,34 @@ namespace Byrone.Xenia.Helpers
 
 		public void Dispose() =>
 			this.pool.Return(this.Data);
+
+		public struct Enumerator : IEnumerator<T>
+		{
+			public required T[] Data { get; init; }
+			public required int Size { get; init; }
+
+			private int current;
+
+			public readonly T Current =>
+				this.Data[this.current];
+
+			public bool MoveNext()
+			{
+				if (this.current == this.Size - 1)
+				{
+					return false;
+				}
+
+				this.current++;
+				return true;
+			}
+		}
+
+		public Enumerator GetEnumerator() =>
+			new()
+			{
+				Data = this.Data,
+				Size = this.Size,
+			};
 	}
 }

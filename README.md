@@ -144,11 +144,53 @@ internal static class Program
 }
 ```
 
+### Using query parameters
+
+The `Request` struct contains a property called `Query`. These are the raw bytes of the query of the path.
+Using `QueryParameters.Parse` you can get a handy `RentedArray<KeyValue>` instance which you can use to access the query
+parameters.
+
+### `Program.cs`
+
+```csharp
+internal static class Program
+{
+    public static void Main(string[] args)
+    {
+        var options = new ServerOptions("0.0.0.0", 80);
+  
+        var server = new Server(options);
+
+        server.AddRequestHandler(new RequestHandler("/"u8, Program.Handler));
+
+        var thread = new Thread(server.Listen);
+        thread.Start();
+    }
+
+    private static void Handler(in Request request, ref ResponseBuilder response)
+    {
+        // Make sure to dispose the instance when you're done using it!
+        using (var queryParameters = QueryParameters.Parse(request.Query))
+        {
+            foreach (var param in queryParameters)
+            {
+                // Do something with the query parameter...
+            }
+        }
+        
+        var html = "<html><body><h1>Hello world!</h1></html></body>"u8;
+
+        response.AppendHtml(in request, in StatusCodes.Status200OK, html);
+    }
+}
+```
+
 ### Response compression
 
 Xenia supports built-in support for GZip and Deflate compression (with Brotli support coming soon). Response compression
 is enabled by default. You can customize this behavior by adding `CompressionMethod` flags to the `ServerOptions`
-constructor. Let's use the [Rendering Razor pages](#rendering-razor-pages) example and customize the compression behavior.
+constructor. Let's use the [Rendering Razor pages](#rendering-razor-pages) example and customize the compression
+behavior.
 
 ```csharp
 internal static class Program

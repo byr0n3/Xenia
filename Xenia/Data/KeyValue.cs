@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Byrone.Xenia.Helpers;
 using JetBrains.Annotations;
@@ -8,33 +9,34 @@ namespace Byrone.Xenia.Data
 	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
 #if DEBUG
-	[DebuggerTypeProxy(typeof(RequestHeader.DebugView))]
+	[DebuggerTypeProxy(typeof(KeyValue.DebugView))]
 #endif
-	public readonly struct RequestHeader : System.IEquatable<RequestHeader>
+	public readonly struct KeyValue : System.IEquatable<KeyValue>
 	{
-		public SpanPointer<byte> Key { get; }
+		public required SpanPointer<byte> Key { get; init; }
 
-		public SpanPointer<byte> Value { get; }
+		public required SpanPointer<byte> Value { get; init; }
 
-		public RequestHeader(System.ReadOnlySpan<byte> key, System.ReadOnlySpan<byte> value)
+		[SetsRequiredMembers]
+		public KeyValue(System.ReadOnlySpan<byte> key, System.ReadOnlySpan<byte> value)
 		{
 			this.Key = key;
 			this.Value = value;
 		}
 
-		public bool Equals(RequestHeader other) =>
+		public bool Equals(KeyValue other) =>
 			this.Key.Equals(other.Key) && this.Value.Equals(other.Value);
 
 		public override bool Equals(object? @object) =>
-			@object is RequestHeader other && this.Equals(other);
+			@object is KeyValue other && this.Equals(other);
 
 		public override int GetHashCode() =>
 			System.HashCode.Combine(this.Key, this.Value);
 
-		public static bool operator ==(RequestHeader left, RequestHeader right) =>
+		public static bool operator ==(KeyValue left, KeyValue right) =>
 			left.Equals(right);
 
-		public static bool operator !=(RequestHeader left, RequestHeader right) =>
+		public static bool operator !=(KeyValue left, KeyValue right) =>
 			!left.Equals(right);
 
 #if DEBUG
@@ -46,7 +48,7 @@ namespace Byrone.Xenia.Data
 
 			public required string Value { get; init; }
 
-			public DebugView(RequestHeader header)
+			public DebugView(KeyValue header)
 			{
 				this.Key = DebugView.encoding.GetString(header.Key);
 				this.Value = DebugView.encoding.GetString(header.Value);

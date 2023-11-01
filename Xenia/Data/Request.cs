@@ -17,21 +17,18 @@ namespace Byrone.Xenia.Data
 
 		public required SpanPointer<byte> Path { get; init; }
 
+		public required SpanPointer<byte> Query { get; init; }
+
 		public required SpanPointer<byte> HtmlVersion { get; init; }
 
-		public required RentedArray<RequestHeader> HeaderData { get; init; }
-
-		public required int HeaderCount { get; init; }
+		public required RentedArray<KeyValue> Headers { get; init; }
 
 		public required SpanPointer<byte> Body { get; init; }
-
-		public System.ReadOnlySpan<RequestHeader> Headers =>
-			this.HeaderData.AsSpan(0, this.HeaderCount);
 
 		public required CompressionMethod SupportedCompression { get; init; }
 
 		public void Dispose() =>
-			this.HeaderData.Dispose();
+			this.Headers.Dispose();
 
 #if DEBUG
 		private sealed class DebugView
@@ -48,10 +45,10 @@ namespace Byrone.Xenia.Data
 			public DebugView(Request request)
 			{
 				this.Method = request.Method;
-				this.Path = DebugView.encoding.GetString(request.Path.AsSpan);
-				this.HtmlVersion = DebugView.encoding.GetString(request.HtmlVersion.AsSpan);
+				this.Path = DebugView.encoding.GetString(request.Path.Span);
+				this.HtmlVersion = DebugView.encoding.GetString(request.HtmlVersion.Span);
 
-				this.Headers = new Dictionary<string, string>(request.HeaderCount, System.StringComparer.Ordinal);
+				this.Headers = new Dictionary<string, string>(request.Headers.Size, System.StringComparer.Ordinal);
 
 				foreach (var header in request.Headers)
 				{

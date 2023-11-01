@@ -56,12 +56,12 @@ namespace Byrone.Xenia.Data
 				this.Name = DebugView.encoding.GetString(formData.Name);
 				this.Content = DebugView.encoding.GetString(formData.Content);
 
-				if (!formData.ContentType.AsSpan.IsEmpty)
+				if (!formData.ContentType.Span.IsEmpty)
 				{
 					this.ContentType = DebugView.encoding.GetString(formData.ContentType);
 				}
 
-				if (!formData.FileName.AsSpan.IsEmpty)
+				if (!formData.FileName.Span.IsEmpty)
 				{
 					this.ContentType = DebugView.encoding.GetString(formData.FileName);
 				}

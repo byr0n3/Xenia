@@ -9,7 +9,7 @@ namespace Byrone.Xenia.Helpers
 		{
 			// we use `StartsWith` here because the Content-Type header also contains the name of the form data regions
 			if (!request.TryGetHeader(Headers.ContentType, out var contentHeader) ||
-				!System.MemoryExtensions.StartsWith(contentHeader.Value.AsSpan, ContentTypes.MultipartFormData))
+				!System.MemoryExtensions.StartsWith(contentHeader.Value.Span, ContentTypes.MultipartFormData))
 			{
 				@out = default;
 				count = 0;
