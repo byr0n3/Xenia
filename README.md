@@ -226,7 +226,7 @@ file `styles.css` and a file called `secret.txt`, the latter being contained in 
 starting the server and navigating to `http://localhost/styles.css`, you can access the contents of the `styles.css`
 file. Keep in mind that every file in this directory will be accessible. Navigating
 to `http://localhost/dont_access/secret.txt` will return the contents of the `secret.txt` file. Please don't use a
-static files directory to store sensitive.
+static files directory to store sensitive data.
 
 ```csharp
 internal static class Program
