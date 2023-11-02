@@ -217,3 +217,39 @@ internal static class Program
     }
 }
 ```
+
+### Serving static files
+
+Xenia has built-in support for serving static files. You can define an array of static file directories in
+the `ServerOptions` struct. In this example, we have a directory called `_static`. This directory contains a
+file `styles.css` and a file called `secret.txt`, the latter being contained in a directory called `dont_access`. By
+starting the server and navigating to `http://localhost/styles.css`, you can access the contents of the `styles.css`
+file. Keep in mind that every file in this directory will be accessible. Navigating
+to `http://localhost/dont_access/secret.txt` will return the contents of the `secret.txt` file. Please don't use a
+static files directory to store sensitive.
+
+```csharp
+internal static class Program
+{
+    public static void Main(string[] args)
+    {
+        var options = new ServerOptions("0.0.0.0", 80)
+        {
+            StaticFiles = new[] { "_static" },    
+        };
+ 
+        var server = new Server(options);
+    }
+}
+```
+
+```xml
+
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+    <ItemGroup>
+        <Content Include="_static\**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+</Project>
+```

@@ -16,6 +16,8 @@ namespace Byrone.Xenia.Data
 
 		public CompressionMethod SupportedCompression { get; init; }
 
+		public string[]? StaticFiles { get; init; }
+
 		[SetsRequiredMembers]
 		public ServerOptions(string ip, int port, CompressionMethod compression) : this(ip, port, null, compression)
 		{

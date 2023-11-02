@@ -22,6 +22,10 @@
 		<Compile Update="Helpers\ResponseBuilder.Numerics.cs">
 			<DependentUpon>ResponseBuilder.cs</DependentUpon>
 		</Compile>
+
+		<Compile Update="Extensions\ResponseExtensions.File.cs">
+			<DependentUpon>ResponseExtensions.cs</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 </Project>

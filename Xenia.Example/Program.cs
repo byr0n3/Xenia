@@ -12,7 +12,10 @@ namespace Byrone.Xenia.Example
 		{
 			var cancelTokenSource = new CancellationTokenSource();
 
-			var options = new ServerOptions("0.0.0.0", 6969, new ConsoleLogger());
+			var options = new ServerOptions("0.0.0.0", 6969, new ConsoleLogger())
+			{
+				StaticFiles = new[] { "_static" },
+			};
 
 			var server = new Server(options, cancelTokenSource.Token);
 

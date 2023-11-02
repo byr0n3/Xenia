@@ -27,4 +27,10 @@
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web"/>
 	</ItemGroup>
 
+	<ItemGroup>
+		<Content Include="_static\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
 </Project>

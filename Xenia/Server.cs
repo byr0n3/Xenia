@@ -97,7 +97,7 @@ namespace Byrone.Xenia
 				{
 					request = default;
 
-					Server.WriteInternalServerError(ref response);
+					Server.InternalServerErrorHandler(in request, ref response);
 				}
 
 				this.WriteHandler(stream, in request, response);
@@ -179,33 +179,45 @@ namespace Byrone.Xenia
 					request.Method != HttpMethod.Options &&
 					handler.Method != request.Method)
 				{
-					return Server.WriteMethodNotAllowed;
+					return Server.MethodNotAllowedHandler;
 				}
 
 				return handler.Handler;
 			}
 
-			return Server.WriteNotFound;
+			return this.FallbackHandler;
 		}
 
-		private static void WriteMethodNotAllowed(in Request request, ref ResponseBuilder response) =>
-			response.AppendHtml(in request,
-								in StatusCodes.Status405MethodNotAllowed,
-								// @todo Customizable
-								"<html><body><h1>405 Method Not Allowed</h1></html></body>"u8);
+		private void FallbackHandler(in Request request, ref ResponseBuilder response)
+		{
+			if (this.options.StaticFiles is null)
+			{
+				// @todo Customizable
+				response.AppendHeaders(in request, in StatusCodes.Status404NotFound, System.ReadOnlySpan<byte>.Empty);
+				return;
+			}
 
-		private static void WriteNotFound(in Request request, ref ResponseBuilder response) =>
-			response.AppendHtml(in request,
-								in StatusCodes.Status404NotFound,
-								// @todo Customizable
-								"<html><body><h1>404 Not Found</h1></html></body>"u8);
+			var fileInfo = StaticFiles.GetStaticFileInfo(this.options.StaticFiles, request.Path);
 
-		private static void WriteInternalServerError(ref ResponseBuilder response) =>
-			response.AppendHeaders(in StatusCodes.Status404NotFound,
-								   "HTML/1.1"u8,
-								   System.ReadOnlySpan<byte>.Empty,
-								   System.ReadOnlySpan<byte>.Empty,
-								   0);
+			if (fileInfo is null)
+			{
+				// @todo Customizable
+				response.AppendHeaders(in request, in StatusCodes.Status404NotFound, System.ReadOnlySpan<byte>.Empty);
+				return;
+			}
+
+			response.AppendFile(in request, fileInfo);
+		}
+
+		// @todo Customizable
+		private static void MethodNotAllowedHandler(in Request request, ref ResponseBuilder response) =>
+			response.AppendHeaders(in request,
+								   in StatusCodes.Status405MethodNotAllowed,
+								   System.ReadOnlySpan<byte>.Empty);
+
+		// @todo Customizable
+		private static void InternalServerErrorHandler(in Request request, ref ResponseBuilder response) =>
+			response.AppendHeaders(in request, in StatusCodes.Status404NotFound, System.ReadOnlySpan<byte>.Empty);
 
 		public void Dispose()
 		{

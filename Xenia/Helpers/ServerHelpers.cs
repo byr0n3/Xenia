@@ -17,6 +17,8 @@ namespace Byrone.Xenia.Helpers
 				return false;
 			}
 
+			// @todo Find the range that is just the \r\n separator, index is the amount of headers
+
 			// skip the html command
 			var headers = new RentedArray<KeyValue>(ranges.Length - 1);
 			var headerCount = ServerHelpers.ParseHeaders(bytes, ranges, ref headers);
