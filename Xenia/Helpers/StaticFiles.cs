@@ -11,7 +11,7 @@ namespace Byrone.Xenia.Helpers
 			path = path.Slice(1);
 
 			var idx = System.MemoryExtensions.LastIndexOf(path, Characters.ForwardSlash);
-			var dir = Encoding.UTF8.GetString(idx == -1 ? System.ReadOnlySpan<byte>.Empty : path.Slice(0, idx));
+			var dir = Encoding.UTF8.GetString(idx == -1 ? default : path.Slice(0, idx));
 			var fileName = Encoding.UTF8.GetString(idx == -1 ? path : path.Slice(idx + 1));
 
 			foreach (var directory in directories)

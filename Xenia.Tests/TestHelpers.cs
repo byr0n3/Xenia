@@ -61,9 +61,7 @@ namespace Xenia.Tests
 		{
 			if (!Json.TryParse(in request, out Person model))
 			{
-				response.AppendHeaders(in request,
-									   in StatusCodes.Status500InternalServerError,
-									   System.ReadOnlySpan<byte>.Empty);
+				response.AppendHeaders(in request, in StatusCodes.Status500InternalServerError, default);
 				return;
 			}
 
@@ -105,9 +103,7 @@ namespace Xenia.Tests
 				!data.TryFindItem(count, "name"u8, out var name) ||
 				!data.TryFindItem(count, "age"u8, out var age))
 			{
-				response.AppendHeaders(in request,
-									   in StatusCodes.Status500InternalServerError,
-									   System.ReadOnlySpan<byte>.Empty);
+				response.AppendHeaders(in request, in StatusCodes.Status500InternalServerError, default);
 				return;
 			}
 
@@ -129,9 +125,7 @@ namespace Xenia.Tests
 				if (!@params.TryGetParameter("name"u8, out var name) ||
 					!@params.TryGetParameter("age"u8, out var param))
 				{
-					response.AppendHeaders(in request,
-										   in StatusCodes.Status400BadRequest,
-										   System.ReadOnlySpan<byte>.Empty);
+					response.AppendHeaders(in request, in StatusCodes.Status400BadRequest, default);
 
 					return;
 				}

@@ -71,11 +71,7 @@ namespace Xenia.Tests
 			return;
 
 			static void TempHandler(in Request request, ref ResponseBuilder builder) =>
-				builder.AppendHeaders(in StatusCodes.Status200OK,
-									  request.HtmlVersion,
-									  System.ReadOnlySpan<byte>.Empty,
-									  "test/plain"u8,
-									  0);
+				builder.AppendHeaders(in request, in StatusCodes.Status200OK, default);
 		}
 
 		[TestMethod]

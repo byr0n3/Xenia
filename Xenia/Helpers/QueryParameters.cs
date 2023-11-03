@@ -37,7 +37,7 @@ namespace Byrone.Xenia.Helpers
 				// query parameter has no value
 				if (idx == -1)
 				{
-					result[count++] = new KeyValue(sliced, Bytes.Empty);
+					result[count++] = new KeyValue(sliced, default);
 					continue;
 				}
 

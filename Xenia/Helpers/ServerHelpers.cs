@@ -97,7 +97,7 @@ namespace Byrone.Xenia.Helpers
 		{
 			if (method is not (HttpMethod.Post or HttpMethod.Put or HttpMethod.Patch))
 			{
-				return Bytes.Empty;
+				return default;
 			}
 
 			// get the index of the line that's just a new line
@@ -117,7 +117,7 @@ namespace Byrone.Xenia.Helpers
 				break;
 			}
 
-			return newLineIdx == 0 ? Bytes.Empty : bytes.Slice(ranges[newLineIdx].Start.Value);
+			return newLineIdx != 0 ? bytes.Slice(ranges[newLineIdx].Start.Value) : default;
 		}
 
 		private static int ParseHeaders(Bytes bytes, Ranges ranges, ref RentedArray<KeyValue> headers)

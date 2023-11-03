@@ -46,7 +46,7 @@ namespace Byrone.Xenia.Extensions
 				CompressionMethod.GZip    => "gzip"u8,
 				CompressionMethod.Deflate => "deflate"u8,
 				CompressionMethod.Brotli  => "br"u8,
-				_                         => System.ReadOnlySpan<byte>.Empty,
+				_                         => default,
 			};
 		}
 	}

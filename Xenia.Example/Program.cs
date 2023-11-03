@@ -67,9 +67,7 @@ namespace Byrone.Xenia.Example
 
 				data.Dispose();
 
-				builder.AppendHeaders(in request,
-									  in StatusCodes.Status204NoContent,
-									  System.ReadOnlySpan<byte>.Empty);
+				builder.AppendHeaders(in request, in StatusCodes.Status204NoContent, default);
 				return;
 			}
 
@@ -79,9 +77,7 @@ namespace Byrone.Xenia.Example
 				return;
 			}
 
-			builder.AppendHeaders(in request,
-								  in StatusCodes.Status500InternalServerError,
-								  System.ReadOnlySpan<byte>.Empty);
+			builder.AppendHeaders(in request, in StatusCodes.Status500InternalServerError, default);
 		}
 
 		private static void ResizeHandler(in Request request, ref ResponseBuilder builder)
