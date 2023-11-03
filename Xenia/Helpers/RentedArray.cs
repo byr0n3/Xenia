@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Byrone.Xenia.Internal;
 using JetBrains.Annotations;
@@ -61,12 +62,23 @@ namespace Byrone.Xenia.Helpers
 		public void Dispose() =>
 			this.pool.Return(this.Data);
 
+		public Enumerator GetEnumerator() =>
+			new(this.Data, this.Size);
+
 		public struct Enumerator : IEnumerator<T>
 		{
 			public required T[] Data { get; init; }
 			public required int Size { get; init; }
 
 			private int current;
+
+			[SetsRequiredMembers]
+			public Enumerator(T[] data, int size)
+			{
+				this.Data = data;
+				this.Size = size;
+				this.current = -1;
+			}
 
 			public readonly T Current =>
 				this.Data[this.current];
@@ -82,12 +94,5 @@ namespace Byrone.Xenia.Helpers
 				return true;
 			}
 		}
-
-		public Enumerator GetEnumerator() =>
-			new()
-			{
-				Data = this.Data,
-				Size = this.Size,
-			};
 	}
 }

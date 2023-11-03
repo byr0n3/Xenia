@@ -1,5 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Byrone.Xenia.Extensions;
@@ -8,6 +10,7 @@ using Byrone.Xenia.Helpers;
 namespace Xenia.Tests
 {
 	[TestClass]
+	[SuppressMessage("Usage", "MA0040")]
 	public sealed partial class ServerTests
 	{
 		internal static readonly int Port = System.Random.Shared.Next(100, 10000);
@@ -118,6 +121,38 @@ namespace Xenia.Tests
 			// server would've crashed before it could write the response if the response was too big
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
+		}
+
+		[TestMethod]
+		public async Task ServerCanParseQueryParametersAsync()
+		{
+			const string name = "John Doe";
+			const int age = 21;
+
+			var response = await ServerTests.httpClient.GetAsync($"/query?name={name}&age={age}").ConfigureAwait(false);
+
+			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
+
+			var person = await response.Content.ReadFromJsonAsync(Person.TypeInfo).ConfigureAwait(false);
+
+			Assert.IsTrue(string.Equals(person.Name, name, System.StringComparison.Ordinal));
+			Assert.IsTrue(person.Age == age);
+		}
+
+		[TestMethod]
+		public async Task ServerCanServeStaticFilesAsync()
+		{
+			var response = await ServerTests.httpClient.GetAsync("/style.css").ConfigureAwait(false);
+
+			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/css");
+
+			response = await ServerTests.httpClient.GetAsync("/js/main.js").ConfigureAwait(false);
+
+			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/javascript");
+
+			response = await ServerTests.httpClient.GetAsync("/file.txt").ConfigureAwait(false);
+
+			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/plain");
 		}
 	}
 }

@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Web;
 using Byrone.Xenia.Extensions;
 using Byrone.Xenia.Helpers;
 using HttpMethod = Byrone.Xenia.Data.HttpMethod;
@@ -27,6 +28,7 @@ namespace Xenia.Tests
 			{
 				IpAddress = "0.0.0.0",
 				Port = ServerTests.Port,
+				StaticFiles = new[] { "_static", "_cdn" },
 			};
 
 			var server = new Server(options, token);
@@ -35,6 +37,7 @@ namespace Xenia.Tests
 			server.AddRequestHandler(new RequestHandler("/json"u8, JsonHandler));
 			server.AddRequestHandler(new RequestHandler("/json/model"u8, JsonModelHandler));
 			server.AddRequestHandler(new RequestHandler("/resize"u8, TestHelpers.ResizeHandler));
+			server.AddRequestHandler(new RequestHandler("/query"u8, TestHelpers.QueryParametersHandler));
 			server.AddRequestHandler(new RequestHandler(HttpMethod.Post, "/post"u8, Handler));
 			server.AddRequestHandler(new RequestHandler(HttpMethod.Post, "/post/formdata"u8,
 														TestHelpers.PostFormDataHandler));
@@ -58,11 +61,9 @@ namespace Xenia.Tests
 		{
 			if (!Json.TryParse(in request, out Person model))
 			{
-				response.AppendHeaders(in StatusCodes.Status500InternalServerError,
-									   request.HtmlVersion,
-									   System.ReadOnlySpan<byte>.Empty,
-									   System.ReadOnlySpan<byte>.Empty,
-									   0);
+				response.AppendHeaders(in request,
+									   in StatusCodes.Status500InternalServerError,
+									   System.ReadOnlySpan<byte>.Empty);
 				return;
 			}
 
@@ -75,11 +76,7 @@ namespace Xenia.Tests
 		{
 			const int size = 10000;
 
-			response.AppendHeaders(in StatusCodes.Status200OK,
-								   request.HtmlVersion,
-								   System.ReadOnlySpan<byte>.Empty,
-								   ContentTypes.Json,
-								   0);
+			response.AppendHeaders(in request, in StatusCodes.Status200OK, ContentTypes.Json);
 
 			response.Append('[');
 
@@ -108,11 +105,9 @@ namespace Xenia.Tests
 				!data.TryFindItem(count, "name"u8, out var name) ||
 				!data.TryFindItem(count, "age"u8, out var age))
 			{
-				response.AppendHeaders(in StatusCodes.Status500InternalServerError,
-									   request.HtmlVersion,
-									   System.ReadOnlySpan<byte>.Empty,
-									   System.ReadOnlySpan<byte>.Empty,
-									   0);
+				response.AppendHeaders(in request,
+									   in StatusCodes.Status500InternalServerError,
+									   System.ReadOnlySpan<byte>.Empty);
 				return;
 			}
 
@@ -122,13 +117,33 @@ namespace Xenia.Tests
 				Age = int.Parse(age.Content),
 			};
 
-			response.AppendHeaders(in StatusCodes.Status200OK,
-								   request.HtmlVersion,
-								   System.ReadOnlySpan<byte>.Empty,
-								   ContentTypes.Json,
-								   0);
+			response.AppendHeaders(in request, in StatusCodes.Status200OK, ContentTypes.Json);
 
 			response.Append(person);
+		}
+
+		private static void QueryParametersHandler(in Request request, ref ResponseBuilder response)
+		{
+			using (var @params = QueryParameters.Parse(request.Query))
+			{
+				if (!@params.TryGetParameter("name"u8, out var name) ||
+					!@params.TryGetParameter("age"u8, out var param))
+				{
+					response.AppendHeaders(in request,
+										   in StatusCodes.Status400BadRequest,
+										   System.ReadOnlySpan<byte>.Empty);
+
+					return;
+				}
+
+				var person = new Person
+				{
+					Name = HttpUtility.UrlDecode(Encoding.UTF8.GetString(name.Value)),
+					Age = int.Parse(param.Value),
+				};
+
+				response.AppendJson(in request, in StatusCodes.Status200OK, person);
+			}
 		}
 
 		public static void AssertResponse(HttpResponseMessage? response,

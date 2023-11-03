@@ -28,7 +28,7 @@ namespace Xenia.Tests
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
 
-			var content = await response.Content.ReadFromJsonAsync<Person>().ConfigureAwait(false);
+			var content = await response.Content.ReadFromJsonAsync(Person.TypeInfo).ConfigureAwait(false);
 
 			Assert.IsTrue(content == TestHelpers.Person);
 
@@ -45,7 +45,7 @@ namespace Xenia.Tests
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
 
-			var content = await response.Content.ReadFromJsonAsync<Person>().ConfigureAwait(false);
+			var content = await response.Content.ReadFromJsonAsync(Person.TypeInfo).ConfigureAwait(false);
 
 			Assert.IsTrue(content == TestHelpers.Person);
 
@@ -70,7 +70,7 @@ namespace Xenia.Tests
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
 
-			var content = await response.Content.ReadFromJsonAsync<Person>().ConfigureAwait(false);
+			var content = await response.Content.ReadFromJsonAsync(Person.TypeInfo).ConfigureAwait(false);
 
 			Assert.IsTrue(content == person);
 		}

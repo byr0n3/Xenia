@@ -230,7 +230,7 @@ namespace Byrone.Xenia.Internal
 				this.AddMapping(".jpe", "image/jpeg"u8);
 				this.AddMapping(".jpeg", "image/jpeg"u8);
 				this.AddMapping(".jpg", "image/jpeg"u8);
-				this.AddMapping(".js", "application/x-javascript"u8);
+				this.AddMapping(".js", "application/javascript"u8);
 				this.AddMapping(".jsx", "text/jscript"u8);
 				this.AddMapping(".latex", "application/x-latex"u8);
 				this.AddMapping(".lit", "application/x-ms-reader"u8);

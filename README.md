@@ -176,6 +176,11 @@ internal static class Program
             {
                 // Do something with the query parameter...
             }
+            
+            if (queryParameters.TryGetParameter("key"u8, out var key))
+            {
+                // Do something with the query parameter...
+            }
         }
         
         var html = "<html><body><h1>Hello world!</h1></html></body>"u8;
