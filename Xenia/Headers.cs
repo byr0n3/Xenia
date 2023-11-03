@@ -1,4 +1,4 @@
-using Byrone.Xenia.Helpers;
+using Byrone.Xenia.Data;
 using JetBrains.Annotations;
 
 namespace Byrone.Xenia
@@ -6,20 +6,20 @@ namespace Byrone.Xenia
 	[PublicAPI]
 	public static class Headers
 	{
-		public static readonly SpanPointer<byte> AcceptContent = "Accept-Content"u8;
+		public static readonly BytePointer AcceptContent = "Accept-Content"u8;
 
-		public static readonly SpanPointer<byte> AcceptEncoding = "Accept-Encoding"u8;
+		public static readonly BytePointer AcceptEncoding = "Accept-Encoding"u8;
 
-		public static readonly SpanPointer<byte> ContentType = "Content-Type"u8;
+		public static readonly BytePointer ContentType = "Content-Type"u8;
 
-		public static readonly SpanPointer<byte> ContentLength = "Content-Length"u8;
+		public static readonly BytePointer ContentLength = "Content-Length"u8;
 
-		public static readonly SpanPointer<byte> ContentEncoding = "Content-Encoding"u8;
+		public static readonly BytePointer ContentEncoding = "Content-Encoding"u8;
 
-		public static readonly SpanPointer<byte> Date = "Date"u8;
+		public static readonly BytePointer Date = "Date"u8;
 
-		public static readonly SpanPointer<byte> Server = "Server"u8;
+		public static readonly BytePointer Server = "Server"u8;
 
-		public static readonly SpanPointer<byte> TransferEncoding = "Transfer-Encoding"u8;
+		public static readonly BytePointer TransferEncoding = "Transfer-Encoding"u8;
 	}
 }

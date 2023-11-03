@@ -1,8 +1,7 @@
-@using System.Text
 @using Byrone.Xenia.Data
 @layout BaseLayout
 
-<h1>Hello from @(Encoding.UTF8.GetString(Request.Path))!</h1>
+<h1>Hello from @Request.Path.ToString()!</h1>
 
 <ul>
 	@for (var i = 0; i < 1000; i++)

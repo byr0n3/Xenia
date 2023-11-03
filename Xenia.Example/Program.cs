@@ -34,7 +34,7 @@ namespace Byrone.Xenia.Example
 
 		private static void RawHtmlHandler(in Request request, ref ResponseBuilder response)
 		{
-			var html = $"<html><body><h1>Hello from {Encoding.UTF8.GetString(request.Path)}!</h1></html></body>";
+			var html = $"<html><body><h1>Hello from {request.Path}!</h1></html></body>";
 
 			response.AppendHtml(in request, in StatusCodes.Status200OK, html);
 		}
@@ -52,8 +52,6 @@ namespace Byrone.Xenia.Example
 			var written = Encoding.UTF8.GetBytes(json, span);
 
 			response.Move(written);
-
-			var a = System.Text.Encoding.UTF8.GetString(response.GetContent());
 		}
 
 		private static void PostHandler(in Request request, ref ResponseBuilder builder)
@@ -64,8 +62,7 @@ namespace Byrone.Xenia.Example
 				{
 					var item = data[i];
 
-					System.Console.WriteLine(System.Text.Encoding.UTF8.GetString(item.Name) + ": " +
-											 System.Text.Encoding.UTF8.GetString(item.Content));
+					System.Console.WriteLine(item.Name + ": " + item.Content);
 				}
 
 				data.Dispose();

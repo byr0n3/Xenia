@@ -12,7 +12,7 @@
 // Copied over from official source so we don't have to install a dependency for just this
 // Also modified to fit our needs
 
-using Byrone.Xenia.Helpers;
+using Byrone.Xenia.Data;
 using System.Collections.Generic;
 using System.IO;
 
@@ -27,7 +27,7 @@ namespace Byrone.Xenia.Internal
 
 		private abstract class MimeMappingDictionaryBase
 		{
-			private readonly Dictionary<string, SpanPointer<byte>> mappings =
+			private readonly Dictionary<string, BytePointer> mappings =
 				new(System.StringComparer.OrdinalIgnoreCase);
 
 			private static readonly char[] pathSeparatorChars =

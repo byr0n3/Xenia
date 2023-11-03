@@ -113,7 +113,7 @@ namespace Xenia.Tests
 
 			var person = new Person
 			{
-				Name = Encoding.UTF8.GetString(name.Content),
+				Name = name.Content.ToString() ?? string.Empty,
 				Age = int.Parse(age.Content),
 			};
 
@@ -138,7 +138,7 @@ namespace Xenia.Tests
 
 				var person = new Person
 				{
-					Name = HttpUtility.UrlDecode(Encoding.UTF8.GetString(name.Value)),
+					Name = HttpUtility.UrlDecode(name.Value.ToString() ?? string.Empty),
 					Age = int.Parse(param.Value),
 				};
 

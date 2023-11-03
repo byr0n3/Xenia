@@ -13,7 +13,7 @@ namespace Byrone.Xenia.Data
 
 		public required HttpMethod Method { get; init; }
 
-		public required SpanPointer<byte> Path { get; init; }
+		public required BytePointer Path { get; init; }
 
 		public required RequestHandlerCallback Handler { get; init; }
 

@@ -1,17 +1,20 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using Byrone.Xenia.Helpers;
 using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Data
 {
 	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
+#if DEBUG
+	[DebuggerTypeProxy(typeof(StatusCode.DebugView))]
+#endif
 	public readonly struct StatusCode : System.IEquatable<StatusCode>
 	{
 		public required int Code { get; init; }
 
-		public SpanPointer<byte> Message { get; init; }
+		public BytePointer Message { get; init; }
 
 		[SetsRequiredMembers]
 		public StatusCode(int code, System.ReadOnlySpan<byte> message)
@@ -34,5 +37,20 @@ namespace Byrone.Xenia.Data
 
 		public static bool operator !=(StatusCode left, StatusCode right) =>
 			!left.Equals(right);
+
+#if DEBUG
+		private sealed class DebugView
+		{
+			public required int Code { get; init; }
+
+			public required string? Message { get; init; }
+
+			public DebugView(StatusCode statusCode)
+			{
+				this.Code = statusCode.Code;
+				this.Message = statusCode.Message.ToString();
+			}
+		}
+#endif
 	}
 }

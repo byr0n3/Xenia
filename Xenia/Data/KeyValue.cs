@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using Byrone.Xenia.Helpers;
 using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Data
@@ -13,9 +12,9 @@ namespace Byrone.Xenia.Data
 #endif
 	public readonly struct KeyValue : System.IEquatable<KeyValue>
 	{
-		public required SpanPointer<byte> Key { get; init; }
+		public required BytePointer Key { get; init; }
 
-		public required SpanPointer<byte> Value { get; init; }
+		public required BytePointer Value { get; init; }
 
 		[SetsRequiredMembers]
 		public KeyValue(System.ReadOnlySpan<byte> key, System.ReadOnlySpan<byte> value)
@@ -42,16 +41,14 @@ namespace Byrone.Xenia.Data
 #if DEBUG
 		private sealed class DebugView
 		{
-			private static readonly System.Text.Encoding encoding = System.Text.Encoding.Latin1;
+			public required string? Key { get; init; }
 
-			public required string Key { get; init; }
-
-			public required string Value { get; init; }
+			public required string? Value { get; init; }
 
 			public DebugView(KeyValue header)
 			{
-				this.Key = DebugView.encoding.GetString(header.Key);
-				this.Value = DebugView.encoding.GetString(header.Value);
+				this.Key = header.Key.ToString();
+				this.Value = header.Value.ToString();
 			}
 		}
 #endif

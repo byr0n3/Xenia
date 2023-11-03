@@ -47,10 +47,9 @@ the response.
 ### `Test.razor`
 
 ```razor
-@using System.Text
 @using Byrone.Xenia.Data
 
-<h1>Hello from @(Encoding.UTF8.GetString(Request.Path))!</h1>
+<h1>Hello from @Request.Path.ToString()!</h1>
 
 @code {
 	

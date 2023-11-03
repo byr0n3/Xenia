@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Byrone.Xenia.Helpers;
 using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Data
@@ -12,13 +11,13 @@ namespace Byrone.Xenia.Data
 #endif
 	public readonly struct FormDataItem : System.IEquatable<FormDataItem>
 	{
-		public required SpanPointer<byte> Name { get; init; }
+		public required BytePointer Name { get; init; }
 
-		public required SpanPointer<byte> Content { get; init; }
+		public required BytePointer Content { get; init; }
 
-		public SpanPointer<byte> ContentType { get; init; }
+		public BytePointer ContentType { get; init; }
 
-		public SpanPointer<byte> FileName { get; init; }
+		public BytePointer FileName { get; init; }
 
 		public bool Equals(FormDataItem other) =>
 			this.Name.Equals(other.Name) &&
@@ -41,11 +40,9 @@ namespace Byrone.Xenia.Data
 #if DEBUG
 		private sealed class DebugView
 		{
-			private static readonly System.Text.Encoding encoding = System.Text.Encoding.Latin1;
+			public required string? Name { get; init; }
 
-			public required string Name { get; init; }
-
-			public required string Content { get; init; }
+			public required string? Content { get; init; }
 
 			public required string? ContentType { get; init; }
 
@@ -53,18 +50,10 @@ namespace Byrone.Xenia.Data
 
 			public DebugView(FormDataItem formData)
 			{
-				this.Name = DebugView.encoding.GetString(formData.Name);
-				this.Content = DebugView.encoding.GetString(formData.Content);
-
-				if (!formData.ContentType.Span.IsEmpty)
-				{
-					this.ContentType = DebugView.encoding.GetString(formData.ContentType);
-				}
-
-				if (!formData.FileName.Span.IsEmpty)
-				{
-					this.ContentType = DebugView.encoding.GetString(formData.FileName);
-				}
+				this.Name = formData.Name.ToString();
+				this.Content = formData.Content.ToString();
+				this.ContentType = formData.ContentType.ToString();
+				this.FileName = formData.FileName.ToString();
 			}
 		}
 #endif

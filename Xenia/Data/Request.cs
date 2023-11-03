@@ -15,15 +15,15 @@ namespace Byrone.Xenia.Data
 	{
 		public required HttpMethod Method { get; init; }
 
-		public required SpanPointer<byte> Path { get; init; }
+		public required BytePointer Path { get; init; }
 
-		public required SpanPointer<byte> Query { get; init; }
+		public required BytePointer Query { get; init; }
 
-		public required SpanPointer<byte> HtmlVersion { get; init; }
+		public required BytePointer HtmlVersion { get; init; }
 
 		public required RentedArray<KeyValue> Headers { get; init; }
 
-		public required SpanPointer<byte> Body { get; init; }
+		public required BytePointer Body { get; init; }
 
 		public required CompressionMethod SupportedCompression { get; init; }
 
@@ -33,36 +33,38 @@ namespace Byrone.Xenia.Data
 #if DEBUG
 		private sealed class DebugView
 		{
-			private static readonly System.Text.Encoding encoding = System.Text.Encoding.Latin1;
-
 			public readonly HttpMethod Method;
-			public readonly string Path;
-			public readonly string HtmlVersion;
-			public readonly Dictionary<string, string> Headers;
+			public readonly string? Path;
+			public readonly string? Query;
+			public readonly string? HtmlVersion;
+			public readonly Dictionary<string, string?> Headers;
 			public readonly string? Body;
 			public readonly CompressionMethod SupportedCompression;
 
 			public DebugView(Request request)
 			{
 				this.Method = request.Method;
-				this.Path = DebugView.encoding.GetString(request.Path.Span);
-				this.HtmlVersion = DebugView.encoding.GetString(request.HtmlVersion.Span);
+				this.Path = request.Path.ToString();
+				this.Query = request.Query.ToString();
+				this.HtmlVersion = request.HtmlVersion.ToString();
 
-				this.Headers = new Dictionary<string, string>(request.Headers.Size, System.StringComparer.Ordinal);
+				this.Headers = new Dictionary<string, string?>(request.Headers.Size, System.StringComparer.Ordinal);
 
 				foreach (var header in request.Headers)
 				{
-					var key = DebugView.encoding.GetString(header.Key);
-					var value = DebugView.encoding.GetString(header.Value);
+					var key = header.Key.ToString();
+
+					if (key is null)
+					{
+						continue;
+					}
+
+					var value = header.Value.ToString();
 
 					this.Headers.Add(key, value);
 				}
 
-				if (request.Body != default)
-				{
-					this.Body = DebugView.encoding.GetString(request.Body);
-				}
-
+				this.Body = request.Body.ToString();
 				this.SupportedCompression = request.SupportedCompression;
 			}
 		}

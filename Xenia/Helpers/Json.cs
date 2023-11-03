@@ -12,7 +12,7 @@ namespace Byrone.Xenia.Helpers
 		{
 			// `StartsWith` in case the header contains the charset
 			if (!request.TryGetHeader(Headers.ContentType, out var contentHeader) ||
-				!System.MemoryExtensions.StartsWith(contentHeader.Value.Span, ContentTypes.Json))
+				!System.MemoryExtensions.StartsWith(contentHeader.Value.AsSpan(), ContentTypes.Json))
 			{
 				@out = default;
 				return false;

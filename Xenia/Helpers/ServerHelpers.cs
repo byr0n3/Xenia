@@ -288,11 +288,11 @@ namespace Byrone.Xenia.Helpers
 		{
 			public required HttpMethod Method { get; init; }
 
-			public required SpanPointer<byte> Path { get; init; }
+			public required BytePointer Path { get; init; }
 
-			public required SpanPointer<byte> Query { get; init; }
+			public required BytePointer Query { get; init; }
 
-			public required SpanPointer<byte> Html { get; init; }
+			public required BytePointer Html { get; init; }
 		}
 	}
 }
