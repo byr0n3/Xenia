@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using Byrone.Xenia.Data;
 using Byrone.Xenia.Internal;
 
@@ -16,7 +15,10 @@ namespace Byrone.Xenia.Helpers
 			var dir = new BytePointer(idx == -1 ? default : path.Slice(0, idx)).ToString();
 			var fileName = new BytePointer(idx == -1 ? path : path.Slice(idx + 1)).ToString();
 
-			Debug.Assert(fileName is not null);
+			if (fileName is null)
+			{
+				return null;
+			}
 
 			// ReSharper disable once LoopCanBeConvertedToQuery
 			foreach (var directory in directories)

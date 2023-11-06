@@ -199,7 +199,7 @@ namespace Byrone.Xenia
 			if (this.Options.StaticFiles is null)
 			{
 				// @todo Customizable
-				response.AppendHeaders(in request, in StatusCodes.Status404NotFound, default);
+				response.AppendHeaders(in request, in StatusCodes.Status404NotFound, ContentTypes.Html);
 				return;
 			}
 
@@ -208,7 +208,7 @@ namespace Byrone.Xenia
 			if (fileInfo is null)
 			{
 				// @todo Customizable
-				response.AppendHeaders(in request, in StatusCodes.Status404NotFound, default);
+				response.AppendHeaders(in request, in StatusCodes.Status404NotFound, ContentTypes.Html);
 				return;
 			}
 
@@ -217,11 +217,11 @@ namespace Byrone.Xenia
 
 		// @todo Customizable
 		private static void MethodNotAllowedHandler(in Request request, ref ResponseBuilder response) =>
-			response.AppendHeaders(in request, in StatusCodes.Status405MethodNotAllowed, default);
+			response.AppendHeaders(in request, in StatusCodes.Status405MethodNotAllowed, ContentTypes.Html);
 
 		// @todo Customizable
 		private static void InternalServerErrorHandler(in Request request, ref ResponseBuilder response) =>
-			response.AppendHeaders(in request, in StatusCodes.Status404NotFound, default);
+			response.AppendHeaders(in request, in StatusCodes.Status404NotFound, ContentTypes.Html);
 
 		public void Dispose()
 		{

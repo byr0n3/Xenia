@@ -120,6 +120,29 @@ namespace Xenia.Tests
 		}
 
 		[TestMethod]
+		public async Task ServerCanParseRouteParametersAsync()
+		{
+			const string slug = "test-blog-post";
+
+			ServerTests.server?.AddRequestHandler(new RequestHandler("/posts/{post}"u8, Handler));
+
+			var response = await ServerTests.httpClient.GetAsync("/posts/" + slug).ConfigureAwait(false);
+
+			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
+
+			return;
+
+			static void Handler(in Request request, ref ResponseBuilder builder)
+			{
+				Assert.IsTrue(request.TryGetParameter("post"u8, out var parameter));
+
+				Assert.IsTrue(string.Equals(parameter.Value.ToString(), slug, System.StringComparison.Ordinal));
+
+				builder.AppendHeaders(in request, in StatusCodes.Status200OK, ContentTypes.Json);
+			}
+		}
+
+		[TestMethod]
 		public async Task ServerCanParseQueryParametersAsync()
 		{
 			const string name = "John Doe";

@@ -21,6 +21,7 @@ namespace Byrone.Xenia.Example
 
 			server.AddRazorPage<Test>("/"u8);
 			server.AddRazorPage<Test>("/test"u8);
+			server.AddRazorPage<Test>("/posts2/{post}"u8);
 
 			server.AddRequestHandler(new RequestHandler("/html"u8, Program.RawHtmlHandler));
 			server.AddRequestHandler(new RequestHandler("/posts/{post}"u8, Program.RouteParametersHandler));

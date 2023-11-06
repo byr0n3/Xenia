@@ -143,6 +143,49 @@ internal static class Program
 }
 ```
 
+### Route parameters
+
+Sometimes, you want the path for your route to be dynamic. Take a blog website for example. You'll probably want a route
+that returns a specific blog post. It's highly likely that you want the path of the route to contain the slug of the
+blog post. In Xenia, you can declare dynamic parts of a path by adding `{paramter_name}` to the path. Here's an example:
+
+### `Program.cs`
+
+```csharp
+internal static class Program
+{
+    public static void Main(string[] args)
+    {
+        var options = new ServerOptions("0.0.0.0", 80);
+  
+        var server = new Server(options);
+
+        server.AddRequestHandler(new RequestHandler("/posts/{post}"u8, Program.Handler));
+
+        var thread = new Thread(server.Listen);
+        thread.Start();
+    }
+
+    private static void Handler(in Request request, ref ResponseBuilder response)
+    {
+        foreach (var parameter in request.RouteParameters)
+        {
+            // Do something with the parameter...
+        }
+        
+        // You can also get a specific parameter:
+        if (request.TryGetParameter("post"u8, out var postParameter))
+        {
+            // Do something with the parameter...
+        }
+        
+        var html = "<html><body><h1>Hello world!</h1></html></body>"u8;
+
+        response.AppendHtml(in request, in StatusCodes.Status200OK, html);
+    }
+}
+```
+
 ### Using query parameters
 
 The `Request` struct contains a property called `Query`. These are the raw bytes of the query of the path.
@@ -250,10 +293,10 @@ internal static class Program
 ```xml
 
 <Project Sdk="Microsoft.NET.Sdk.Razor">
-    <ItemGroup>
-        <Content Include="_static\**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+	<ItemGroup>
+		<Content Include="_static\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 </Project>
 ```
