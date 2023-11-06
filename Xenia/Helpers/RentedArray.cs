@@ -59,8 +59,13 @@ namespace Byrone.Xenia.Helpers
 			return System.MemoryExtensions.AsSpan(this.Data, start, size);
 		}
 
-		public void Dispose() =>
-			this.pool.Return(this.Data);
+		public void Dispose()
+		{
+			if (this.pool is not null && this.Data is not null)
+			{
+				this.pool.Return(this.Data);
+			}
+		}
 
 		public Enumerator GetEnumerator() =>
 			new(this.Data, this.Size);

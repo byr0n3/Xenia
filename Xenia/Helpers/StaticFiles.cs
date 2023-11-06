@@ -1,5 +1,7 @@
-﻿using System.IO;
-using System.Text;
+﻿using System.Diagnostics;
+using System.IO;
+using Byrone.Xenia.Data;
+using Byrone.Xenia.Internal;
 
 namespace Byrone.Xenia.Helpers
 {
@@ -11,12 +13,16 @@ namespace Byrone.Xenia.Helpers
 			path = path.Slice(1);
 
 			var idx = System.MemoryExtensions.LastIndexOf(path, Characters.ForwardSlash);
-			var dir = Encoding.UTF8.GetString(idx == -1 ? default : path.Slice(0, idx));
-			var fileName = Encoding.UTF8.GetString(idx == -1 ? path : path.Slice(idx + 1));
+			var dir = new BytePointer(idx == -1 ? default : path.Slice(0, idx)).ToString();
+			var fileName = new BytePointer(idx == -1 ? path : path.Slice(idx + 1)).ToString();
 
+			Debug.Assert(fileName is not null);
+
+			// ReSharper disable once LoopCanBeConvertedToQuery
 			foreach (var directory in directories)
 			{
-				var fullPath = idx == -1 ? Path.Combine(directory, fileName) : Path.Combine(directory, dir, fileName);
+				// @todo Optimize
+				var fullPath = dir is null ? Path.Combine(directory, fileName) : Path.Combine(directory, dir, fileName);
 
 				var info = new FileInfo(fullPath);
 

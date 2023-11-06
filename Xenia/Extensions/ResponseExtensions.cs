@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
-using System.Text;
 using Byrone.Xenia.Data;
 using Byrone.Xenia.Helpers;
+using Byrone.Xenia.Internal;
 using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Extensions
@@ -9,8 +9,6 @@ namespace Byrone.Xenia.Extensions
 	[PublicAPI]
 	public static partial class ResponseExtensions
 	{
-		private static readonly Encoding enc = Encoding.UTF8;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void AppendSpace(this ref ResponseBuilder @this) =>
 			@this.Append(' ');

@@ -23,6 +23,7 @@ namespace Byrone.Xenia.Example
 			server.AddRazorPage<Test>("/test"u8);
 
 			server.AddRequestHandler(new RequestHandler("/html"u8, Program.RawHtmlHandler));
+			server.AddRequestHandler(new RequestHandler("/posts/{post}"u8, Program.RouteParametersHandler));
 			server.AddRequestHandler(new RequestHandler("/json"u8, Program.JsonHandler));
 			server.AddRequestHandler(new RequestHandler(HttpMethod.Post, "/post"u8, Program.PostHandler));
 			server.AddRequestHandler(new RequestHandler("/resize"u8, Program.ResizeHandler));
@@ -35,6 +36,20 @@ namespace Byrone.Xenia.Example
 		private static void RawHtmlHandler(in Request request, ref ResponseBuilder response)
 		{
 			var html = $"<html><body><h1>Hello from {request.Path}!</h1></html></body>";
+
+			response.AppendHtml(in request, in StatusCodes.Status200OK, html);
+		}
+
+		private static void RouteParametersHandler(in Request request, ref ResponseBuilder response)
+		{
+			var html = "<html><body><ul>";
+
+			foreach (var parameter in request.RouteParameters)
+			{
+				html += $"<li>{parameter.Key}: {parameter.Value}</li>";
+			}
+
+			html += "</ul></html></body>";
 
 			response.AppendHtml(in request, in StatusCodes.Status200OK, html);
 		}

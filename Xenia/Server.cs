@@ -6,6 +6,7 @@ using System.Threading;
 using Byrone.Xenia.Data;
 using Byrone.Xenia.Extensions;
 using Byrone.Xenia.Helpers;
+using Byrone.Xenia.Internal;
 
 namespace Byrone.Xenia
 {
@@ -13,14 +14,15 @@ namespace Byrone.Xenia
 	{
 		private const int bufferSize = 1024;
 
+		internal readonly ServerOptions Options;
+
 		private readonly TcpListener listener;
-		private readonly ServerOptions options;
 		private readonly List<RequestHandler> handlers; // @todo No list
 		private readonly CancellationToken cancelToken;
 		private readonly CancellationTokenRegistration cancelRegistration;
 
 		private IServerLogger? Logger =>
-			this.options.Logger;
+			this.Options.Logger;
 
 		public Server(ServerOptions options, CancellationToken token = default)
 		{
@@ -29,7 +31,7 @@ namespace Byrone.Xenia
 				throw new System.ArgumentException("Invalid IP address", nameof(options));
 			}
 
-			this.options = options;
+			this.Options = options;
 			this.cancelToken = token;
 			this.handlers = new List<RequestHandler>();
 			this.listener = new TcpListener(ip, options.Port);
@@ -89,9 +91,9 @@ namespace Byrone.Xenia
 
 				var response = new ResponseBuilder();
 
-				if (ServerHelpers.TryGetRequest(this.options, bytes, ranges.AsSpan(0, count), out var request))
+				if (ServerHelpers.TryGetRequest(this, bytes, ranges.AsSpan(0, count), out var request))
 				{
-					this.GetRequestHandler(in request).Invoke(in request, ref response);
+					request.HandlerCallback.Invoke(in request, ref response);
 				}
 				else
 				{
@@ -131,7 +133,7 @@ namespace Byrone.Xenia
 				return;
 			}
 
-			var supported = this.options.SupportedCompression;
+			var supported = this.Options.SupportedCompression;
 
 			if (supported == CompressionMethod.None)
 			{
@@ -165,19 +167,22 @@ namespace Byrone.Xenia
 			}
 		}
 
-		private RequestHandler.RequestHandlerCallback GetRequestHandler(in Request request)
+		// @todo Move to ServerHelpers?
+		internal RequestHandler.RequestHandlerCallback GetRequestHandler(HttpMethod requestMethod,
+																		 System.ReadOnlySpan<byte> requestPath,
+																		 out RentedArray<KeyValue> parameters)
 		{
 			foreach (var handler in this.handlers)
 			{
-				if (handler.Path != request.Path)
+				if (!ServerHelpers.ComparePaths(requestPath, handler.Path, out parameters))
 				{
 					continue;
 				}
 
 				// OPTIONS & HEAD can ignore the handler's method
-				if (request.Method != HttpMethod.Head &&
-					request.Method != HttpMethod.Options &&
-					handler.Method != request.Method)
+				if (requestMethod != HttpMethod.Head &&
+					requestMethod != HttpMethod.Options &&
+					handler.Method != requestMethod)
 				{
 					return Server.MethodNotAllowedHandler;
 				}
@@ -185,19 +190,20 @@ namespace Byrone.Xenia
 				return handler.Handler;
 			}
 
+			parameters = default;
 			return this.FallbackHandler;
 		}
 
 		private void FallbackHandler(in Request request, ref ResponseBuilder response)
 		{
-			if (this.options.StaticFiles is null)
+			if (this.Options.StaticFiles is null)
 			{
 				// @todo Customizable
 				response.AppendHeaders(in request, in StatusCodes.Status404NotFound, default);
 				return;
 			}
 
-			var fileInfo = StaticFiles.GetStaticFileInfo(this.options.StaticFiles, request.Path);
+			var fileInfo = StaticFiles.GetStaticFileInfo(this.Options.StaticFiles, request.Path);
 
 			if (fileInfo is null)
 			{

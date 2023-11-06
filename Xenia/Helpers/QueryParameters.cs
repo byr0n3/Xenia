@@ -1,4 +1,5 @@
 using Byrone.Xenia.Data;
+using Byrone.Xenia.Internal;
 using JetBrains.Annotations;
 using Bytes = System.ReadOnlySpan<byte>;
 

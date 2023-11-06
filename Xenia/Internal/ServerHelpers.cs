@@ -2,20 +2,23 @@ using System.Buffers;
 using System.Runtime.InteropServices;
 using Byrone.Xenia.Data;
 using Byrone.Xenia.Extensions;
+using Byrone.Xenia.Helpers;
 using Bytes = System.ReadOnlySpan<byte>;
 using Ranges = System.ReadOnlySpan<System.Range>;
 
-namespace Byrone.Xenia.Helpers
+namespace Byrone.Xenia.Internal
 {
 	internal static class ServerHelpers
 	{
-		public static bool TryGetRequest(ServerOptions options, Bytes bytes, Ranges ranges, out Request request)
+		public static bool TryGetRequest(Server server, Bytes bytes, Ranges ranges, out Request request)
 		{
 			if (!ServerHelpers.TryGetHtmlCommand(bytes, ranges, out var command))
 			{
 				request = default;
 				return false;
 			}
+
+			var handler = server.GetRequestHandler(command.Method, command.Path, out var routeParameters);
 
 			// @todo Find the range that is just the \r\n separator, index is the amount of headers
 
@@ -30,13 +33,15 @@ namespace Byrone.Xenia.Helpers
 			{
 				Method = command.Method,
 				Path = command.Path,
+				RouteParameters = routeParameters,
 				Query = command.Query,
 				HtmlVersion = command.Html,
 				// bit of a hack, used to redefine the 'size' property of the RentedArray instance
 				// otherwise we'd have to also define something like 'HeadersCount' in the request
 				Headers = new RentedArray<KeyValue>(headers.Data, ArrayPool<KeyValue>.Shared, headerCount),
 				Body = ServerHelpers.GetRequestBody(command.Method, bytes, ranges),
-				SupportedCompression = options.SupportedCompression,
+				SupportedCompression = server.Options.SupportedCompression,
+				HandlerCallback = handler,
 			};
 
 			return true;
@@ -198,6 +203,69 @@ namespace Byrone.Xenia.Helpers
 			}
 
 			return HttpMethod.None;
+		}
+
+		// @todo Refactor
+		public static bool ComparePaths(Bytes requestPath, Bytes handlerPath, out RentedArray<KeyValue> parameters)
+		{
+			var paramIdx = System.MemoryExtensions.IndexOf(handlerPath, Characters.OpenCurlyBracket);
+
+			if (paramIdx == -1)
+			{
+				parameters = default;
+				return System.MemoryExtensions.SequenceEqual(requestPath, handlerPath);
+			}
+
+			System.Span<System.Range> handlerRanges = stackalloc System.Range[16];
+			var handlerCount = handlerPath.Split(handlerRanges, Characters.ForwardSlash);
+
+			if (handlerCount == 0)
+			{
+				parameters = default;
+				return System.MemoryExtensions.SequenceEqual(requestPath, handlerPath);
+			}
+
+			System.Span<System.Range> requestRanges = stackalloc System.Range[16];
+			var requestCount = requestPath.Split(requestRanges, Characters.ForwardSlash);
+
+			if (handlerCount != requestCount)
+			{
+				parameters = default;
+				return false;
+			}
+
+			var parameterCount = System.MemoryExtensions.Count(handlerPath, Characters.OpenCurlyBracket);
+			parameters = new RentedArray<KeyValue>(parameterCount);
+			var currentParam = 0;
+
+			for (var i = 0; i < handlerCount; i++)
+			{
+				var handlerRange = handlerRanges[i];
+				var requestRange = requestRanges[i];
+
+				var handlerPart = handlerPath.Slice(handlerRange);
+				var requestPart = requestPath.Slice(requestRange);
+
+				var openParamIdx = System.MemoryExtensions.IndexOf(handlerPart, Characters.OpenCurlyBracket);
+
+				if (openParamIdx == -1)
+				{
+					if (System.MemoryExtensions.SequenceEqual(handlerPart, requestPart))
+					{
+						continue;
+					}
+
+					parameters = default;
+					return false;
+				}
+
+				// skip { and }
+				var paramName = handlerPart.Slice(1, handlerPart.Length - 2);
+
+				parameters[currentParam++] = new KeyValue(paramName, requestPart);
+			}
+
+			return true;
 		}
 
 		// header can contain multiple accepted encodings, find the first supported one

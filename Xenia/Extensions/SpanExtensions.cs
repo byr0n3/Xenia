@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using Byrone.Xenia.Helpers;
+using Byrone.Xenia.Internal;
 using Bytes = System.ReadOnlySpan<byte>;
 
 namespace Byrone.Xenia.Extensions

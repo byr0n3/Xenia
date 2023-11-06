@@ -1,5 +1,5 @@
 using Byrone.Xenia.Data;
-using Byrone.Xenia.Helpers;
+using Byrone.Xenia.Internal;
 using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Extensions
@@ -21,6 +21,23 @@ namespace Byrone.Xenia.Extensions
 			}
 
 			header = default;
+			return false;
+		}
+
+		public static bool TryGetParameter(in this Request @this, System.ReadOnlySpan<byte> key, out KeyValue parameter)
+		{
+			foreach (var param in @this.RouteParameters)
+			{
+				if (!param.Key.Equals(key))
+				{
+					continue;
+				}
+
+				parameter = param;
+				return true;
+			}
+
+			parameter = default;
 			return false;
 		}
 

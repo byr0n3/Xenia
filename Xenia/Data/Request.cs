@@ -17,6 +17,8 @@ namespace Byrone.Xenia.Data
 
 		public required BytePointer Path { get; init; }
 
+		public required RentedArray<KeyValue> RouteParameters { get; init; }
+
 		public required BytePointer Query { get; init; }
 
 		public required BytePointer HtmlVersion { get; init; }
@@ -27,8 +29,17 @@ namespace Byrone.Xenia.Data
 
 		public required CompressionMethod SupportedCompression { get; init; }
 
-		public void Dispose() =>
+		// @todo Remove
+		/// <summary>
+		/// DO NOT CALL THIS MANUALLY!
+		/// </summary>
+		public required RequestHandler.RequestHandlerCallback HandlerCallback { get; init; }
+
+		public void Dispose()
+		{
+			this.RouteParameters.Dispose();
 			this.Headers.Dispose();
+		}
 
 #if DEBUG
 		private sealed class DebugView
@@ -37,6 +48,7 @@ namespace Byrone.Xenia.Data
 			public readonly string? Path;
 			public readonly string? Query;
 			public readonly string? HtmlVersion;
+			public readonly Dictionary<string, string?> RouteParameters;
 			public readonly Dictionary<string, string?> Headers;
 			public readonly string? Body;
 			public readonly CompressionMethod SupportedCompression;
@@ -62,6 +74,23 @@ namespace Byrone.Xenia.Data
 					var value = header.Value.ToString();
 
 					this.Headers.Add(key, value);
+				}
+
+				this.RouteParameters =
+					new Dictionary<string, string?>(request.RouteParameters.Size, System.StringComparer.Ordinal);
+
+				foreach (var param in request.RouteParameters)
+				{
+					var key = param.Key.ToString();
+
+					if (key is null)
+					{
+						continue;
+					}
+
+					var value = param.Value.ToString();
+
+					this.RouteParameters.Add(key, value);
 				}
 
 				this.Body = request.Body.ToString();

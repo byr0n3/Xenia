@@ -1,9 +1,6 @@
-﻿using JetBrains.Annotations;
-
-namespace Byrone.Xenia.Helpers
+﻿namespace Byrone.Xenia.Internal
 {
-	[PublicAPI]
-	public static class Characters
+	internal static class Characters
 	{
 		public const byte NewLine = (byte)'\n';
 
@@ -18,6 +15,8 @@ namespace Byrone.Xenia.Helpers
 		public const byte QuestionMark = (byte)'?';
 
 		public const byte Ampersand = (byte)'&';
+
+		public const byte OpenCurlyBracket = (byte)'{';
 
 		public new const byte Equals = (byte)'=';
 	}
