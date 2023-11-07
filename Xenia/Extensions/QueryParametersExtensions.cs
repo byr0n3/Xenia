@@ -7,9 +7,9 @@ namespace Byrone.Xenia.Extensions
 	[PublicAPI]
 	public static class QueryParametersExtensions
 	{
-		public static bool TryGetParameter(this RentedArray<KeyValue> @this,
-										   System.ReadOnlySpan<byte> key,
-										   out KeyValue value)
+		public static bool TryGetValue(this RentedArray<KeyValue> @this,
+									   System.ReadOnlySpan<byte> key,
+									   out KeyValue value)
 		{
 			foreach (var param in @this)
 			{

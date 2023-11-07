@@ -1,10 +1,12 @@
 using System.Runtime.CompilerServices;
 using Byrone.Xenia.Internal;
+using JetBrains.Annotations;
 using Bytes = System.ReadOnlySpan<byte>;
 
 namespace Byrone.Xenia.Extensions
 {
-	internal static class SpanExtensions
+	[PublicAPI]
+	public static class SpanExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Bytes Slice(this Bytes value, System.Range range) =>

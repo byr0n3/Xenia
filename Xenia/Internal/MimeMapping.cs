@@ -14,6 +14,7 @@
 
 using Byrone.Xenia.Data;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace Byrone.Xenia.Internal
@@ -109,6 +110,7 @@ namespace Byrone.Xenia.Internal
 		// This can provide fallback mappings if we don't have an actual applicationHost.config from which to read
 		private sealed class MimeMappingDictionaryClassic : MimeMappingDictionaryBase
 		{
+			[SuppressMessage("Design", "MA0051")]
 			protected override void PopulateMappings()
 			{
 				// This list was copied from the IIS7 configuration file located at:

@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
 using Byrone.Xenia.Extensions;
-using Byrone.Xenia.Internal;
+using Byrone.Xenia.Helpers;
 
-namespace Byrone.Xenia.Helpers
+namespace Byrone.Xenia.Internal
 {
 	internal static class ChunkedContent
 	{

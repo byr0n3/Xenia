@@ -21,7 +21,7 @@ namespace Byrone.Xenia.Data
 
 		public required BytePointer Query { get; init; }
 
-		public required BytePointer HtmlVersion { get; init; }
+		public required BytePointer HttpVersion { get; init; }
 
 		public required RentedArray<KeyValue> Headers { get; init; }
 
@@ -47,7 +47,7 @@ namespace Byrone.Xenia.Data
 			public readonly HttpMethod Method;
 			public readonly string? Path;
 			public readonly string? Query;
-			public readonly string? HtmlVersion;
+			public readonly string? HttpVersion;
 			public readonly Dictionary<string, string?> RouteParameters;
 			public readonly Dictionary<string, string?> Headers;
 			public readonly string? Body;
@@ -58,7 +58,7 @@ namespace Byrone.Xenia.Data
 				this.Method = request.Method;
 				this.Path = request.Path.ToString();
 				this.Query = request.Query.ToString();
-				this.HtmlVersion = request.HtmlVersion.ToString();
+				this.HttpVersion = request.HttpVersion.ToString();
 
 				this.Headers = new Dictionary<string, string?>(request.Headers.Size, System.StringComparer.Ordinal);
 

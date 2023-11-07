@@ -84,7 +84,7 @@ internal static class Program
 
 `Person.cs` contains the model that the JSON data will be based off of. We define a `JsonSerializerContext` to help the
 C# runtime figure out how to turn the model into JSON. This is a lot faster than letting the C# runtime run reflection
-on the model in runtime, and allows for Native AOT support. Note how the struct extends from `IJson<T>`. This will allow
+on the model, and allows for Native AOT support. Note how the struct extends from `IJson<T>`. This will allow
 you to easily return the JSON data in the request handler.
 
 In the request handler, simply call `response.AppendJson(in request, in StatusCodes.Status200OK, model);` to write the
@@ -174,7 +174,7 @@ internal static class Program
         }
         
         // You can also get a specific parameter:
-        if (request.TryGetParameter("post"u8, out var postParameter))
+        if (request.TryGetRouteParameter("post"u8, out var postParameter))
         {
             // Do something with the parameter...
         }
@@ -219,7 +219,7 @@ internal static class Program
                 // Do something with the query parameter...
             }
             
-            if (queryParameters.TryGetParameter("key"u8, out var key))
+            if (queryParameters.TryGetValue("key"u8, out var key))
             {
                 // Do something with the query parameter...
             }

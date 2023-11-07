@@ -24,6 +24,32 @@ namespace Byrone.Xenia.Extensions
 			@this.Append(Characters.NewLine);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void AppendHttp(ref this ResponseBuilder @this,
+									  System.ReadOnlySpan<byte> httpVersion,
+									  in StatusCode statusCode)
+		{
+			@this.Append(httpVersion);
+			@this.AppendSpace();
+			@this.Append(statusCode.Code);
+			@this.AppendSpace();
+			@this.Append(statusCode.Message);
+			@this.AppendLineEnd();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void AppendHeader(ref this ResponseBuilder @this,
+										System.ReadOnlySpan<byte> key,
+										System.ReadOnlySpan<byte> value)
+		{
+			@this.Append(key);
+			@this.AppendColon();
+			@this.AppendSpace();
+			@this.Append(value);
+			@this.AppendLineEnd();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void AppendHeaders(this ref ResponseBuilder @this,
 										 in Request request,
 										 in StatusCode code,
@@ -31,26 +57,19 @@ namespace Byrone.Xenia.Extensions
 										 int contentLength = 0) =>
 			ResponseExtensions.AppendHeaders(ref @this,
 											 in code,
-											 request.HtmlVersion,
+											 request.HttpVersion,
 											 request.GetCompressionMethodHeader(),
 											 contentType,
 											 contentLength);
 
 		public static void AppendHeaders(this ref ResponseBuilder @this,
-										 in StatusCode code,
-										 System.ReadOnlySpan<byte> htmlVersion,
+										 in StatusCode statusCode,
+										 System.ReadOnlySpan<byte> httpVersion,
 										 System.ReadOnlySpan<byte> contentEncoding,
 										 System.ReadOnlySpan<byte> contentType,
 										 int contentLength = 0)
 		{
-			// HTML spec
-
-			@this.Append(htmlVersion);
-			@this.AppendSpace();
-			@this.Append(code.Code);
-			@this.AppendSpace();
-			@this.Append(code.Message);
-			@this.AppendLineEnd();
+			ResponseExtensions.AppendHttp(ref @this, httpVersion, in statusCode);
 
 			// Headers
 
@@ -60,19 +79,11 @@ namespace Byrone.Xenia.Extensions
 			@this.Append(System.DateTime.UtcNow);
 			@this.AppendLineEnd();
 
-			@this.Append(Headers.Server);
-			@this.AppendColon();
-			@this.AppendSpace();
-			@this.Append("Xenia"u8);
-			@this.AppendLineEnd();
+			ResponseExtensions.AppendHeader(ref @this, Headers.Server, "Xenia"u8);
 
 			if (!contentType.IsEmpty)
 			{
-				@this.Append(Headers.ContentType);
-				@this.AppendColon();
-				@this.AppendSpace();
-				@this.Append(contentType);
-				@this.AppendLineEnd();
+				ResponseExtensions.AppendHeader(ref @this, Headers.ContentType, contentType);
 			}
 
 			if (contentLength > 0)
@@ -86,11 +97,7 @@ namespace Byrone.Xenia.Extensions
 
 			if (!contentEncoding.IsEmpty)
 			{
-				@this.Append(Headers.ContentEncoding);
-				@this.AppendColon();
-				@this.AppendSpace();
-				@this.Append(contentEncoding);
-				@this.AppendLineEnd();
+				ResponseExtensions.AppendHeader(ref @this, Headers.ContentEncoding, contentEncoding);
 			}
 
 			@this.AppendLineEnd();

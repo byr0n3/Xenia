@@ -122,8 +122,7 @@ namespace Xenia.Tests
 		{
 			using (var @params = QueryParameters.Parse(request.Query))
 			{
-				if (!@params.TryGetParameter("name"u8, out var name) ||
-					!@params.TryGetParameter("age"u8, out var param))
+				if (!@params.TryGetValue("name"u8, out var name) || !@params.TryGetValue("age"u8, out var param))
 				{
 					response.AppendHeaders(in request, in StatusCodes.Status400BadRequest, default);
 

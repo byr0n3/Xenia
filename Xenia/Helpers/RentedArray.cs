@@ -51,7 +51,7 @@ namespace Byrone.Xenia.Helpers
 		{
 			start = System.Math.Clamp(start, 0, this.Size);
 
-			if (size <= 0 || size > this.Size)
+			if ((size <= 0) || (size > this.Size - start))
 			{
 				size = this.Size - start;
 			}

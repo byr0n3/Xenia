@@ -101,6 +101,15 @@ namespace Byrone.Xenia.Helpers
 			this.Move(written);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void EnsureAvailable(int size)
+		{
+			if ((this.position + size) >= this.Capacity)
+			{
+				this.Resize(size);
+			}
+		}
+
 		private void Resize(int add)
 		{
 			var newBuffer = new RentedArray<byte>(this.Capacity + add, true);
@@ -110,14 +119,6 @@ namespace Byrone.Xenia.Helpers
 			this.buffer.Dispose();
 
 			this.buffer = newBuffer;
-		}
-
-		private void EnsureAvailable(int size)
-		{
-			if ((this.position + size) >= this.Capacity)
-			{
-				this.Resize(size);
-			}
 		}
 
 		public readonly void Dispose() =>

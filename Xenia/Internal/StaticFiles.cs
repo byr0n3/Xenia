@@ -1,8 +1,7 @@
 ﻿using System.IO;
 using Byrone.Xenia.Data;
-using Byrone.Xenia.Internal;
 
-namespace Byrone.Xenia.Helpers
+namespace Byrone.Xenia.Internal
 {
 	internal static class StaticFiles
 	{

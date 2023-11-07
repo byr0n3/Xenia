@@ -2,8 +2,9 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using Byrone.Xenia.Helpers;
 
-namespace Byrone.Xenia.Helpers
+namespace Byrone.Xenia.Internal
 {
 	internal sealed class ByteArrayWriter : TextWriter
 	{

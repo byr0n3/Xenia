@@ -134,7 +134,7 @@ namespace Xenia.Tests
 
 			static void Handler(in Request request, ref ResponseBuilder builder)
 			{
-				Assert.IsTrue(request.TryGetParameter("post"u8, out var parameter));
+				Assert.IsTrue(request.TryGetRouteParameter("post"u8, out var parameter));
 
 				Assert.IsTrue(string.Equals(parameter.Value.ToString(), slug, System.StringComparison.Ordinal));
 

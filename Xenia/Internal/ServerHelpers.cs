@@ -12,7 +12,7 @@ namespace Byrone.Xenia.Internal
 	{
 		public static bool TryGetRequest(Server server, Bytes bytes, Ranges ranges, out Request request)
 		{
-			if (!ServerHelpers.TryGetHtmlCommand(bytes, ranges, out var command))
+			if (!ServerHelpers.TryGetHttpCommand(bytes, ranges, out var command))
 			{
 				request = default;
 				return false;
@@ -22,7 +22,7 @@ namespace Byrone.Xenia.Internal
 
 			// @todo Find the range that is just the \r\n separator, index is the amount of headers
 
-			// skip the html command
+			// skip the http command
 			var headers = new RentedArray<KeyValue>(ranges.Length - 1);
 			var headerCount = ServerHelpers.ParseHeaders(bytes, ranges, ref headers);
 
@@ -35,7 +35,7 @@ namespace Byrone.Xenia.Internal
 				Path = command.Path,
 				RouteParameters = routeParameters,
 				Query = command.Query,
-				HtmlVersion = command.Html,
+				HttpVersion = command.Http,
 				// bit of a hack, used to redefine the 'size' property of the RentedArray instance
 				// otherwise we'd have to also define something like 'HeadersCount' in the request
 				Headers = new RentedArray<KeyValue>(headers.Data, ArrayPool<KeyValue>.Shared, headerCount),
@@ -47,9 +47,9 @@ namespace Byrone.Xenia.Internal
 			return true;
 		}
 
-		// the first line of the request contains the HTML command, example:
+		// the first line of the request contains the HTTP command, example:
 		// GET / HTTP/1.1
-		private static bool TryGetHtmlCommand(Bytes bytes, Ranges ranges, out HtmlCommand command)
+		private static bool TryGetHttpCommand(Bytes bytes, Ranges ranges, out HttpCommand command)
 		{
 			const byte space = (byte)' ';
 
@@ -83,16 +83,16 @@ namespace Byrone.Xenia.Internal
 				path = path.Slice(0, queryIdx);
 			}
 
-			var htmlIdx = methodIdx + pathIdx + 2;
+			var httpIdx = methodIdx + pathIdx + 2;
 
-			var html = line.SliceTrimmed(htmlIdx, line.Length - htmlIdx);
+			var http = line.SliceTrimmed(httpIdx, line.Length - httpIdx);
 
-			command = new HtmlCommand
+			command = new HttpCommand
 			{
 				Method = method,
 				Path = path,
 				Query = query,
-				Html = html,
+				Http = http,
 			};
 
 			return true;
@@ -132,7 +132,7 @@ namespace Byrone.Xenia.Internal
 
 			var count = 0;
 
-			// start at 1 to skip the HTML command
+			// start at 1 to skip the HTTP command
 			for (var i = 1; i < ranges.Length - 1; i++)
 			{
 				var range = ranges[i];
@@ -352,7 +352,7 @@ namespace Byrone.Xenia.Internal
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
-		private readonly struct HtmlCommand
+		private readonly struct HttpCommand
 		{
 			public required HttpMethod Method { get; init; }
 
@@ -360,7 +360,7 @@ namespace Byrone.Xenia.Internal
 
 			public required BytePointer Query { get; init; }
 
-			public required BytePointer Html { get; init; }
+			public required BytePointer Http { get; init; }
 		}
 	}
 }

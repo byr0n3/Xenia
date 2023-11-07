@@ -13,7 +13,7 @@ namespace Byrone.Xenia.Extensions
 									  System.ReadOnlySpan<byte> bytes)
 		{
 			@this.AppendHeaders(in code,
-								request.HtmlVersion,
+								request.HttpVersion,
 								request.GetCompressionMethodHeader(),
 								ContentTypes.Json,
 								bytes.Length);

@@ -24,7 +24,7 @@ namespace Byrone.Xenia.Extensions
 			return false;
 		}
 
-		public static bool TryGetParameter(in this Request @this, System.ReadOnlySpan<byte> key, out KeyValue parameter)
+		public static bool TryGetRouteParameter(in this Request @this, System.ReadOnlySpan<byte> key, out KeyValue parameter)
 		{
 			foreach (var param in @this.RouteParameters)
 			{

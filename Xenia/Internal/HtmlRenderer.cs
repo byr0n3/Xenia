@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Renderer = Microsoft.AspNetCore.Components.Web.HtmlRenderer;
 
-namespace Byrone.Xenia.Helpers
+namespace Byrone.Xenia.Internal
 {
 	internal static class HtmlRenderer
 	{
