@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Byrone.Xenia.Helpers;
 using JetBrains.Annotations;
@@ -7,7 +8,7 @@ namespace Byrone.Xenia.Data
 {
 	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct RequestHandler : System.IEquatable<RequestHandler>
+	public readonly unsafe struct RequestHandler : System.IEquatable<RequestHandler>
 	{
 		public delegate void RequestHandlerCallback(in Request request, ref ResponseBuilder response);
 
@@ -15,10 +16,14 @@ namespace Byrone.Xenia.Data
 
 		public required BytePointer Path { get; init; }
 
-		public required RequestHandlerCallback Handler { get; init; }
+		public required delegate*<in Request, ref ResponseBuilder, void> HandlerPtr { private get; init; }
+
+		public RequestHandlerCallback Handler =>
+			RequestHandler.Callback(this.HandlerPtr!);
 
 		[SetsRequiredMembers]
-		public RequestHandler(System.ReadOnlySpan<byte> path, RequestHandlerCallback handler) : this(HttpMethod.Get, path, handler)
+		public RequestHandler(System.ReadOnlySpan<byte> path, RequestHandlerCallback handler) : this(
+			HttpMethod.Get, path, handler)
 		{
 		}
 
@@ -27,7 +32,8 @@ namespace Byrone.Xenia.Data
 		{
 			this.Method = method;
 			this.Path = path;
-			this.Handler = handler;
+
+			this.HandlerPtr = RequestHandler.Ptr(handler);
 		}
 
 		public bool Equals(RequestHandler other) =>
@@ -44,5 +50,13 @@ namespace Byrone.Xenia.Data
 
 		public static bool operator !=(RequestHandler left, RequestHandler right) =>
 			!left.Equals(right);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static delegate*<in Request, ref ResponseBuilder, void> Ptr(RequestHandlerCallback handler) =>
+			(delegate*<in Request, ref ResponseBuilder, void>)Marshal.GetFunctionPointerForDelegate(handler);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static RequestHandlerCallback Callback(delegate*<in Request, ref ResponseBuilder, void> ptr) =>
+			Marshal.GetDelegateForFunctionPointer<RequestHandlerCallback>((System.IntPtr)ptr);
 	}
 }

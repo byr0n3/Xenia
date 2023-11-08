@@ -303,3 +303,50 @@ Make sure to add your static file directories to your published output by puttin
 	</ItemGroup>
 </Project>
 ```
+
+### Logging
+
+To enable logging in Xenia, you need to implement your own logger solution by making a class extend from `IServerLogger`. The following example shows you how to log to the standard console output:
+
+```csharp
+// Optionally, you can make the logger extend from `System.IDisposable`. The logger will be disposed when the server gets disposed. 
+internal sealed class ConsoleLogger : IServerLogger
+{
+    public void LogInfo(string message) =>
+        System.Console.WriteLine("[Server] " + message);
+
+    public void LogWarning(string message) =>
+        System.Console.WriteLine("[Server] " + message);
+
+    public void LogError(string message) =>
+        System.Console.WriteLine("[Server] " + message);
+
+    // It's not recommended to throw the exception here. This will cause the server to stop.
+    public void LogException(System.Exception ex, string message)
+    {
+        System.Console.Error.WriteLine("[Server] " + message);
+        System.Console.Error.WriteLine(ex);
+    }
+}
+```
+
+Feel free to implement the logger in any way you like. You could for example choose to write to a file.
+
+Then, make sure to enable logging in your `ServerOptions`:
+
+```csharp
+internal static class Program
+{
+    public static void Main(string[] args)
+    {
+        // You can customize the logging behavior using the LogLevel flags. 
+        // This is prefered over not implementing the proper function to prevent attempting to log unneccesary information.
+        // The default is `LogLevel.All`
+        var logLevel = LogLevel.Errors | LogLevel.Warnings; // Only log exceptions, errors and warnings
+        
+        var options = new ServerOptions("0.0.0.0", 80, new ConsoleLogger(), logLevel);
+ 
+        var server = new Server(options);
+    }
+}
+```

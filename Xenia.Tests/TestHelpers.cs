@@ -29,6 +29,7 @@ namespace Xenia.Tests
 				IpAddress = "0.0.0.0",
 				Port = ServerTests.Port,
 				StaticFiles = new StaticFileDirectory[] { new("_static", true), new("_cdn") },
+				LogLevel = LogLevel.None,
 			};
 
 			var server = new Server(options, token);

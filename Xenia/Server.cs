@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Byrone.Xenia.Data;
 using Byrone.Xenia.Extensions;
@@ -40,7 +42,10 @@ namespace Byrone.Xenia
 
 			this.listener.Start();
 
-			this.Logger?.LogInfo($"Server started on http://{options.IpAddress}:{options.Port}");
+			if (this.ShouldLog(LogLevel.Info))
+			{
+				this.Logger?.LogInfo($"Server started on http://{options.IpAddress}:{options.Port}");
+			}
 		}
 
 		public void AddRequestHandler(in RequestHandler handler)
@@ -75,6 +80,8 @@ namespace Byrone.Xenia
 				Debug.Assert(stream.CanRead);
 				Debug.Assert(stream.CanWrite);
 
+				var timestamp = System.DateTime.UtcNow.Ticks;
+
 				// @todo ResizableRentedArray
 				var buffer = new RentedArray<byte>(Server.bufferSize);
 
@@ -104,13 +111,17 @@ namespace Byrone.Xenia
 
 				this.WriteHandler(stream, in request, response);
 
+				this.LogElapsed(request.Path, timestamp);
+
+				// we're done writing, we can close the connection to the client and clean up now
+
+				client.Dispose();
+
 				request.Dispose();
 
 				response.Dispose();
 
 				buffer.Dispose();
-
-				client.Dispose();
 			}
 			// exception gets thrown if we cancel the cancellationtoken, no need to log
 			catch (SocketException) when (this.cancelToken.IsCancellationRequested)
@@ -119,7 +130,10 @@ namespace Byrone.Xenia
 			}
 			catch (System.Exception ex)
 			{
-				this.Logger?.LogException(ex, "Exception thrown while handling client");
+				if (this.ShouldLog(LogLevel.Exceptions))
+				{
+					this.Logger?.LogException(ex, "Exception thrown while handling client");
+				}
 			}
 		}
 
@@ -161,7 +175,10 @@ namespace Byrone.Xenia
 			}
 			catch (SocketException ex)
 			{
-				this.Logger?.LogException(ex, "Exception writing response to stream");
+				if (this.ShouldLog(LogLevel.Exceptions))
+				{
+					this.Logger?.LogException(ex, "Exception writing response to stream");
+				}
 			}
 		}
 
@@ -221,9 +238,40 @@ namespace Byrone.Xenia
 		private static void InternalServerErrorHandler(in Request request, ref ResponseBuilder response) =>
 			response.AppendHeaders(in request, in StatusCodes.Status404NotFound, ContentTypes.Html);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void LogElapsed(BytePointer path, long timestamp)
+		{
+			if (!this.ShouldLog(LogLevel.Info))
+			{
+				return;
+			}
+
+			var elapsed = (System.DateTime.UtcNow.Ticks - timestamp);
+			var scale = elapsed >= System.TimeSpan.TicksPerMillisecond
+				? System.TimeSpan.TicksPerMillisecond
+				: System.TimeSpan.TicksPerMicrosecond;
+			var suffix = elapsed >= System.TimeSpan.TicksPerMillisecond ? "ms" : "μs";
+
+			this.Logger?.LogInfo($"Handled {path.ToString()} in {elapsed / scale}{suffix}");
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private bool ShouldLog(LogLevel level) =>
+			(this.Options.LogLevel & level) != LogLevel.None && this.Logger is not null;
+
 		public void Dispose()
 		{
-			this.Logger?.LogInfo("Closing server...");
+			if (this.ShouldLog(LogLevel.Info))
+			{
+				this.Logger?.LogInfo("Closing server...");
+			}
+
+			// disposable logger support.
+			// ReSharper disable once SuspiciousTypeConversion.Global
+			if (this.Logger is System.IDisposable logger)
+			{
+				logger.Dispose();
+			}
 
 			this.cancelRegistration.Dispose();
 

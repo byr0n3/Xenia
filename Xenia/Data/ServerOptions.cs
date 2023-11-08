@@ -14,24 +14,23 @@ namespace Byrone.Xenia.Data
 
 		public IServerLogger? Logger { get; init; }
 
+		public LogLevel LogLevel { get; init; }
+
 		public CompressionMethod SupportedCompression { get; init; }
 
 		public StaticFileDirectory[]? StaticFiles { get; init; }
 
 		[SetsRequiredMembers]
-		public ServerOptions(string ip, int port, CompressionMethod compression) : this(ip, port, null, compression)
-		{
-		}
-
-		[SetsRequiredMembers]
 		public ServerOptions(string ip,
 							 int port,
 							 IServerLogger? logger = null,
+							 LogLevel logLevel = LogLevel.All,
 							 CompressionMethod compression = CompressionMethod.All)
 		{
 			this.IpAddress = ip;
 			this.Port = port;
 			this.Logger = logger;
+			this.LogLevel = logLevel;
 			this.SupportedCompression = compression;
 		}
 	}

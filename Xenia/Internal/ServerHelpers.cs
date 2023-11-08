@@ -26,6 +26,12 @@ namespace Byrone.Xenia.Internal
 			var headers = new RentedArray<KeyValue>(ranges.Length - 1);
 			var headerCount = ServerHelpers.ParseHeaders(bytes, ranges, ref headers);
 
+			// bit of a hack, used to redefine the 'size' property of the RentedArray instance
+			// otherwise we'd have to also define something like 'HeadersCount' in the request
+			headers = new RentedArray<KeyValue>(headers.Data, ArrayPool<KeyValue>.Shared, headerCount);
+
+			var body = ServerHelpers.GetRequestBody(command.Method, bytes, ranges);
+
 			// important: DON'T DISPOSE THE HEADERS VARIABLE!
 			// we pass the rented array to a new instance down below
 
@@ -36,10 +42,8 @@ namespace Byrone.Xenia.Internal
 				RouteParameters = routeParameters,
 				Query = command.Query,
 				HttpVersion = command.Http,
-				// bit of a hack, used to redefine the 'size' property of the RentedArray instance
-				// otherwise we'd have to also define something like 'HeadersCount' in the request
-				Headers = new RentedArray<KeyValue>(headers.Data, ArrayPool<KeyValue>.Shared, headerCount),
-				Body = ServerHelpers.GetRequestBody(command.Method, bytes, ranges),
+				Headers = headers,
+				Body = body,
 				SupportedCompression = server.Options.SupportedCompression,
 				HandlerCallback = handler,
 			};
