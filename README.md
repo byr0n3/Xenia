@@ -282,13 +282,16 @@ internal static class Program
     {
         var options = new ServerOptions("0.0.0.0", 80)
         {
-            StaticFiles = new[] { "_static" },    
+            // Alternatively, you can use `new(string, bool)` to require the request path to include the base directory path
+            StaticFiles = new StaticFileDirectory[] { new("_static") },
         };
  
         var server = new Server(options);
     }
 }
 ```
+
+Make sure to add your static file directories to your published output by putting the following into your `.csproj`:
 
 ```xml
 

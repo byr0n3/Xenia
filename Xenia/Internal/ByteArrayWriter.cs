@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Byrone.Xenia.Helpers;
@@ -28,9 +29,11 @@ namespace Byrone.Xenia.Internal
 			this.position = 0;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private System.Span<byte> Take(int length) =>
 			this.buffer.AsSpan(this.position, length);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Move(int length) =>
 			this.position += length;
 
@@ -47,6 +50,7 @@ namespace Byrone.Xenia.Internal
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Write(byte value)
 		{
 			this.EnsureAvailable(sizeof(byte));
@@ -59,9 +63,11 @@ namespace Byrone.Xenia.Internal
 
 		#region Chars
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Write(char value) =>
 			this.Write((byte)value);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Write(char[]? value)
 		{
 			if (value is null)
@@ -126,6 +132,7 @@ namespace Byrone.Xenia.Internal
 			this.Move(written);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Write(char[] value, int start, int length) =>
 			this.Write(System.MemoryExtensions.AsSpan(value, start, length));
 
@@ -138,37 +145,42 @@ namespace Byrone.Xenia.Internal
 
 			this.EnsureAvailable(value.Length);
 
-			var temp = new RentedArray<char>(value.Length);
+			System.Span<char> temp = stackalloc char[value.Length];
 
-			value.CopyTo(0, temp.Data, value.Length);
+			value.CopyTo(0, temp, value.Length);
 
-			this.Write(temp.AsSpan(0, value.Length));
-
-			temp.Dispose();
+			this.Write(temp.Slice(0, value.Length));
 		}
 
 		#endregion
 
 		#region Numerics
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Write(float value) =>
 			this.Write(value);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Write(int value) =>
 			this.Write(value);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Write(uint value) =>
 			this.Write(value);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Write(ulong value) =>
 			this.Write(value);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Write(long value) =>
 			this.Write(value);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Write(decimal value) =>
 			this.Write(value);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override void Write(double value) =>
 			this.Write(value);
 
@@ -195,6 +207,8 @@ namespace Byrone.Xenia.Internal
 
 		protected override void Dispose(bool disposing)
 		{
+			base.Dispose(disposing);
+
 			if (!disposing)
 			{
 				return;

@@ -36,19 +36,14 @@ namespace Byrone.Xenia.Helpers
 
 		// @todo File support
 		// @todo REFACTOR
-		private static bool TryParse(System.ReadOnlySpan<byte> bytes,
-									 out RentedArray<FormDataItem> @out,
-									 out int outCount)
+		private static bool TryParse(System.ReadOnlySpan<byte> bytes, out RentedArray<FormDataItem> @out, out int outCount)
 		{
-			// @todo Lower + resizable
-			var ranges = new RentedArray<System.Range>(32);
+			System.Span<System.Range> ranges = stackalloc System.Range[32];
 
-			var count = bytes.Split(ranges.Data, Characters.NewLine);
+			var count = bytes.Split(ranges, Characters.NewLine);
 
 			if (count == 0)
 			{
-				ranges.Dispose();
-
 				@out = default;
 				outCount = 0;
 				return false;
@@ -107,8 +102,6 @@ namespace Byrone.Xenia.Helpers
 				nameBytes = default;
 				contentBytes = default;
 			}
-
-			ranges.Dispose();
 
 			return true;
 		}

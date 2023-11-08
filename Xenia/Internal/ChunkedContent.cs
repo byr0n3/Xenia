@@ -8,15 +8,12 @@ namespace Byrone.Xenia.Internal
 	{
 		public static int ParseChunkedContent(System.ReadOnlySpan<byte> data, out RentedArray<byte> result)
 		{
-			// @todo
-			var ranges = new RentedArray<System.Range>(32);
+			System.Span<System.Range> ranges = stackalloc System.Range[32];
 
-			var count = data.Split(ranges.Data, Characters.NewLine);
+			var count = data.Split(ranges, Characters.NewLine);
 
 			if (count == 0)
 			{
-				ranges.Dispose();
-
 				result = default;
 				return 0;
 			}
@@ -48,8 +45,6 @@ namespace Byrone.Xenia.Internal
 				offset += nextLength;
 				nextLength = 0;
 			}
-
-			ranges.Dispose();
 
 			return offset;
 		}

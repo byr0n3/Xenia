@@ -14,7 +14,7 @@ namespace Byrone.Xenia.Example
 
 			var options = new ServerOptions("0.0.0.0", 6969, new ConsoleLogger())
 			{
-				StaticFiles = new[] { "_static" },
+				StaticFiles = new StaticFileDirectory[] { new("_static") },
 			};
 
 			var server = new Server(options, cancelTokenSource.Token);

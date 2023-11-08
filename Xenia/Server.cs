@@ -82,16 +82,16 @@ namespace Byrone.Xenia
 
 				var bytes = buffer.AsSpan().Slice(0, read);
 
-				// @todo ResizableRentedArray
-				var ranges = new RentedArray<System.Range>(32);
+				// @todo Resizable?
+				System.Span<System.Range> ranges = stackalloc System.Range[32];
 
-				var count = bytes.Split(ranges.Data, Characters.NewLine);
+				var count = bytes.Split(ranges, Characters.NewLine);
 
 				Debug.Assert(count != 0);
 
 				var response = new ResponseBuilder();
 
-				if (ServerHelpers.TryGetRequest(this, bytes, ranges.AsSpan(0, count), out var request))
+				if (ServerHelpers.TryGetRequest(this, bytes, ranges.Slice(0, count), out var request))
 				{
 					request.HandlerCallback.Invoke(in request, ref response);
 				}
@@ -107,8 +107,6 @@ namespace Byrone.Xenia
 				request.Dispose();
 
 				response.Dispose();
-
-				ranges.Dispose();
 
 				buffer.Dispose();
 

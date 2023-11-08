@@ -161,15 +161,19 @@ namespace Xenia.Tests
 		[TestMethod]
 		public async Task ServerCanServeStaticFilesAsync()
 		{
-			var response = await ServerTests.httpClient.GetAsync("/style.css").ConfigureAwait(false);
+			var response = await ServerTests.httpClient.GetAsync("/_static/style.css").ConfigureAwait(false);
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/css");
 
-			response = await ServerTests.httpClient.GetAsync("/js/main.js").ConfigureAwait(false);
+			response = await ServerTests.httpClient.GetAsync("/_static/js/main.js").ConfigureAwait(false);
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/javascript");
 
 			response = await ServerTests.httpClient.GetAsync("/file.txt").ConfigureAwait(false);
+
+			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/plain");
+
+			response = await ServerTests.httpClient.GetAsync("/nested/nested_file.txt").ConfigureAwait(false);
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/plain");
 		}

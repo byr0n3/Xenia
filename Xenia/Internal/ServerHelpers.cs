@@ -279,14 +279,12 @@ namespace Byrone.Xenia.Internal
 				return false;
 			}
 
-			var ranges = new RentedArray<System.Range>(3);
+			System.Span<System.Range> ranges = stackalloc System.Range[3];
 
-			var count = value.Split(ranges.Data, Characters.Comma);
+			var count = value.Split(ranges, Characters.Comma);
 
 			if (count == 0)
 			{
-				ranges.Dispose();
-
 				@out = ServerHelpers.GetCompressionMode(value);
 				return @out != CompressionMethod.None;
 			}
@@ -311,11 +309,8 @@ namespace Byrone.Xenia.Internal
 					continue;
 				}
 
-				ranges.Dispose();
 				return true;
 			}
-
-			ranges.Dispose();
 
 			@out = CompressionMethod.None;
 			return false;
