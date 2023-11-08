@@ -16,10 +16,10 @@ namespace Byrone.Xenia.Data
 
 		public required BytePointer Path { get; init; }
 
-		public required delegate*<in Request, ref ResponseBuilder, void> HandlerPtr { private get; init; }
+		private readonly delegate*<in Request, ref ResponseBuilder, void> handlerPtr;
 
 		public RequestHandlerCallback Handler =>
-			RequestHandler.Callback(this.HandlerPtr!);
+			RequestHandler.Callback(this.handlerPtr!);
 
 		[SetsRequiredMembers]
 		public RequestHandler(System.ReadOnlySpan<byte> path, RequestHandlerCallback handler) : this(
@@ -33,7 +33,7 @@ namespace Byrone.Xenia.Data
 			this.Method = method;
 			this.Path = path;
 
-			this.HandlerPtr = RequestHandler.Ptr(handler);
+			this.handlerPtr = RequestHandler.Ptr(handler);
 		}
 
 		public bool Equals(RequestHandler other) =>
