@@ -37,14 +37,19 @@ namespace Byrone.Xenia.Data
 			this.Length = value.Length;
 		}
 
-		public System.ReadOnlySpan<byte> AsSpan(int length = 0)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public System.ReadOnlySpan<byte> AsSpan(int length = 0) =>
+			this.AsWriteableSpan(length);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public System.Span<byte> AsWriteableSpan(int length = 0)
 		{
 			if (length <= 0)
 			{
 				length = this.Length;
 			}
 
-			return new System.ReadOnlySpan<byte>(this.Ptr, length);
+			return new System.Span<byte>(this.Ptr, length);
 		}
 
 		public bool Equals(BytePointer other) =>
@@ -79,5 +84,11 @@ namespace Byrone.Xenia.Data
 
 		public static implicit operator System.ReadOnlySpan<byte>(BytePointer value) =>
 			value.AsSpan();
+
+		public static implicit operator BytePointer(System.Span<byte> value) =>
+			new(value);
+
+		public static implicit operator System.Span<byte>(BytePointer value) =>
+			value.AsWriteableSpan();
 	}
 }

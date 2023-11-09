@@ -15,6 +15,7 @@ namespace Byrone.Xenia.Helpers
 				return default;
 			}
 
+			// key-value pair behind the '?' + every ampersand
 			var length = 1 + System.MemoryExtensions.Count(query, Characters.Ampersand);
 
 			var result = new RentedArray<KeyValue>(length);
