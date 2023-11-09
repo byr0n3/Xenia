@@ -253,7 +253,7 @@ internal static class Program
         // Only support Brotli & GZip compression
         var compression = CompressionMethod.Brotli & CompressionMethod.GZip;
         
-        var options = new ServerOptions("0.0.0.0", 80, compression);
+        var options = new ServerOptions("0.0.0.0", 80, null, LogLevel.None, compression);
  
         var server = new Server(options);
 

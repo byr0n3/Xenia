@@ -8,6 +8,8 @@ namespace Byrone.Xenia.Data
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct ServerOptions
 	{
+		public const int DefaultBufferSize = 512;
+
 		public required string IpAddress { get; init; }
 
 		public required int Port { get; init; }
@@ -19,6 +21,8 @@ namespace Byrone.Xenia.Data
 		public CompressionMethod SupportedCompression { get; init; }
 
 		public StaticFileDirectory[]? StaticFiles { get; init; }
+
+		public int BufferSize { get; init; } = ServerOptions.DefaultBufferSize;
 
 		[SetsRequiredMembers]
 		public ServerOptions(string ip,

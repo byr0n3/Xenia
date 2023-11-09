@@ -13,8 +13,6 @@ namespace Byrone.Xenia
 {
 	public sealed class Server : System.IDisposable
 	{
-		private const int bufferSize = 1024;
-
 		internal readonly ServerOptions Options;
 
 		private readonly Socket socket;
@@ -83,7 +81,7 @@ namespace Byrone.Xenia
 				var timestamp = System.DateTime.UtcNow.Ticks;
 
 				// @todo ResizableRentedArray
-				var buffer = new RentedArray<byte>(Server.bufferSize);
+				var buffer = new RentedArray<byte>(this.Options.BufferSize);
 				var read = Server.ReadBytes(client, buffer);
 
 				if (read <= 0)
