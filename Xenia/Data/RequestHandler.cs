@@ -22,8 +22,7 @@ namespace Byrone.Xenia.Data
 			RequestHandler.Callback(this.handlerPtr!);
 
 		[SetsRequiredMembers]
-		public RequestHandler(System.ReadOnlySpan<byte> path, RequestHandlerCallback handler) : this(
-			HttpMethod.Get, path, handler)
+		public RequestHandler(System.ReadOnlySpan<byte> path, RequestHandlerCallback handler) : this(HttpMethod.Get, path, handler)
 		{
 		}
 

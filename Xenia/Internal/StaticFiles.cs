@@ -7,8 +7,13 @@ namespace Byrone.Xenia.Internal
 	internal static class StaticFiles
 	{
 		// @todo Optimize
-		public static FileInfo? GetStaticFileInfo(StaticFileDirectory[] directories, System.ReadOnlySpan<byte> path)
+		public static FileInfo? GetStaticFileInfo(StaticFileDirectory[]? directories, System.ReadOnlySpan<byte> path)
 		{
+			if (directories is null)
+			{
+				return null;
+			}
+
 			// remove leading slash
 			path = path.Slice(1);
 

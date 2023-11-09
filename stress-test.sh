@@ -1,5 +1,5 @@
 #!/bin/bash
-target=${1:-http://localhost:6969/resize}
+target=${1:-http://localhost:6969/json}
 while true # loop forever, until ctrl+c pressed.
 do
 	for i in $(seq 100) # perfrom the inner command 100 times.

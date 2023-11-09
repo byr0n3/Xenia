@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Byrone.Xenia.Data;
 using Byrone.Xenia.Extensions;
@@ -18,7 +17,8 @@ namespace Byrone.Xenia
 
 		internal readonly ServerOptions Options;
 
-		private readonly TcpListener listener;
+		private readonly Socket socket;
+		private readonly IPEndPoint endPoint;
 		private readonly List<RequestHandler> handlers; // @todo No list
 		private readonly CancellationToken cancelToken;
 		private readonly CancellationTokenRegistration cancelRegistration;
@@ -34,18 +34,13 @@ namespace Byrone.Xenia
 			}
 
 			this.Options = options;
+
 			this.cancelToken = token;
 			this.handlers = new List<RequestHandler>();
-			this.listener = new TcpListener(ip, options.Port);
+			this.endPoint = new IPEndPoint(ip, options.Port);
+			this.socket = new Socket(this.endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
 			this.cancelRegistration = this.cancelToken.Register(this.Dispose);
-
-			this.listener.Start();
-
-			if (this.ShouldLog(LogLevel.Info))
-			{
-				this.Logger?.LogInfo($"Server started on http://{options.IpAddress}:{options.Port}");
-			}
 		}
 
 		public void AddRequestHandler(in RequestHandler handler)
@@ -64,6 +59,15 @@ namespace Byrone.Xenia
 
 		public void Listen()
 		{
+			this.socket.Bind(this.endPoint);
+			this.socket.Listen(int.MaxValue); // @todo Configurable
+
+			if (this.ShouldLog(LogLevel.Info))
+			{
+				this.Logger?.LogInfo(
+					$"Server started listening on: on http://{this.Options.IpAddress}:{this.Options.Port}");
+			}
+
 			while (!this.cancelToken.IsCancellationRequested)
 			{
 				this.HandleConnection();
@@ -74,74 +78,100 @@ namespace Byrone.Xenia
 		{
 			try
 			{
-				var client = this.listener.AcceptTcpClient();
-				var stream = client.GetStream();
-
-				Debug.Assert(stream.CanRead);
-				Debug.Assert(stream.CanWrite);
+				var client = this.socket.Accept();
 
 				var timestamp = System.DateTime.UtcNow.Ticks;
 
 				// @todo ResizableRentedArray
 				var buffer = new RentedArray<byte>(Server.bufferSize);
+				var read = Server.ReadBytes(client, buffer);
 
-				var read = stream.Read(buffer.AsSpan());
+				if (read <= 0)
+				{
+					client.Dispose();
+					buffer.Dispose();
+
+					return;
+				}
 
 				var bytes = buffer.AsSpan().Slice(0, read);
 
-				// @todo Resizable?
-				System.Span<System.Range> ranges = stackalloc System.Range[32];
-
-				var count = bytes.Split(ranges, Characters.NewLine);
-
-				Debug.Assert(count != 0);
-
-				var response = new ResponseBuilder();
-
-				if (ServerHelpers.TryGetRequest(this, bytes, ranges.Slice(0, count), out var request))
-				{
-					request.HandlerCallback.Invoke(in request, ref response);
-				}
-				else
-				{
-					request = default;
-
-					Server.InternalServerErrorHandler(in request, ref response);
-				}
-
-				this.WriteHandler(stream, in request, response);
-
-				this.LogElapsed(request.Path, timestamp);
+				this.AppendResponse(client, bytes, timestamp);
 
 				// we're done writing, we can close the connection to the client and clean up now
 
 				client.Dispose();
 
-				request.Dispose();
-
-				response.Dispose();
-
 				buffer.Dispose();
 			}
-			// exception gets thrown if we cancel the cancellationtoken, no need to log
-			catch (SocketException) when (this.cancelToken.IsCancellationRequested)
+			catch (SocketException ex)
 			{
-				//
+				if (!this.cancelToken.IsCancellationRequested)
+				{
+					this.Logger?.LogException(ex, "Socket exception thrown.");
+				}
 			}
 			catch (System.Exception ex)
 			{
 				if (this.ShouldLog(LogLevel.Exceptions))
 				{
-					this.Logger?.LogException(ex, "Exception thrown while handling client");
+					this.Logger?.LogException(ex, "Exception thrown while handling client.");
 				}
 			}
 		}
 
-		private void WriteHandler(NetworkStream networkStream, in Request request, ResponseBuilder response)
+		private static int ReadBytes(Socket client, RentedArray<byte> buffer)
+		{
+			client.ReceiveTimeout = 500;
+
+			try
+			{
+				return client.Receive(buffer.AsSpan());
+			}
+			catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut)
+			{
+				// empty request/connection error
+				return 0;
+			}
+		}
+
+		private void AppendResponse(Socket client, System.ReadOnlySpan<byte> bytes, long timestamp)
+		{
+			// @todo Resizable?
+			System.Span<System.Range> ranges = stackalloc System.Range[32];
+
+			var count = bytes.Split(ranges, Characters.NewLine);
+
+			Debug.Assert(count != 0);
+
+			// @todo Immediately write to socket instead of to array?
+			var response = new ResponseBuilder();
+
+			if (ServerHelpers.TryGetRequest(this, bytes, ranges.Slice(0, count), out var request))
+			{
+				request.HandlerCallback.Invoke(in request, ref response);
+			}
+			else
+			{
+				request = default;
+
+				Server.InternalServerErrorHandler(in request, ref response);
+			}
+
+			this.WriteHandler(client, in request, response);
+
+			this.LogElapsed(request.Path, timestamp);
+
+			request.Dispose();
+
+			response.Dispose();
+		}
+
+		private void WriteHandler(Socket client, in Request request, ResponseBuilder response)
 		{
 			if (request.Method is HttpMethod.Head or HttpMethod.Options)
 			{
-				networkStream.Write(response.GetHeaders());
+				client.Send(response.GetHeaders());
 				return;
 			}
 
@@ -149,29 +179,25 @@ namespace Byrone.Xenia
 
 			if (supported == CompressionMethod.None)
 			{
-				networkStream.Write(response.Content);
+				client.Send(response.Content);
 				return;
 			}
 
 			if (!request.TryGetHeader(Headers.AcceptEncoding, out var acceptEncoding) ||
 				!ServerHelpers.TryGetValidCompressionMode(acceptEncoding.Value, supported, out var compression))
 			{
-				networkStream.Write(response.Content);
+				client.Send(response.Content);
 				return;
 			}
 
 			try
 			{
-				var stream = Compression.GetWriteStream(networkStream, compression);
+				var stream = Compression.GetWriteStream(client, compression);
 
-				networkStream.Write(response.GetHeaders());
+				client.Send(response.GetHeaders());
 				stream.Write(response.GetContent());
 
-				// we dispose the actual network stream in the TCP client
-				if (compression != CompressionMethod.None)
-				{
-					stream.Dispose();
-				}
+				stream.Dispose();
 			}
 			catch (SocketException ex)
 			{
@@ -211,23 +237,16 @@ namespace Byrone.Xenia
 
 		private void FallbackHandler(in Request request, ref ResponseBuilder response)
 		{
-			if (this.Options.StaticFiles is null)
-			{
-				// @todo Customizable
-				response.AppendHeaders(in request, in StatusCodes.Status404NotFound, ContentTypes.Html);
-				return;
-			}
-
 			var fileInfo = StaticFiles.GetStaticFileInfo(this.Options.StaticFiles, request.Path);
 
-			if (fileInfo is null)
+			if (fileInfo is not null)
 			{
-				// @todo Customizable
-				response.AppendHeaders(in request, in StatusCodes.Status404NotFound, ContentTypes.Html);
+				response.AppendFile(in request, fileInfo);
 				return;
 			}
 
-			response.AppendFile(in request, fileInfo);
+			// @todo Customizable
+			response.AppendHeaders(in request, in StatusCodes.Status404NotFound, ContentTypes.Html);
 		}
 
 		// @todo Customizable
@@ -275,7 +294,7 @@ namespace Byrone.Xenia
 
 			this.cancelRegistration.Dispose();
 
-			this.listener.Dispose();
+			this.socket.Dispose();
 		}
 	}
 }

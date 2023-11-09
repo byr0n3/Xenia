@@ -16,6 +16,8 @@ namespace Byrone.Xenia
 
 		public static readonly BytePointer ContentEncoding = "Content-Encoding"u8;
 
+		public static readonly BytePointer Connection = "Connection"u8;
+
 		public static readonly BytePointer Date = "Date"u8;
 
 		public static readonly BytePointer Server = "Server"u8;
