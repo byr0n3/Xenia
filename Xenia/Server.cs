@@ -82,7 +82,7 @@ namespace Byrone.Xenia
 
 				// @todo ResizableRentedArray
 				var buffer = new RentedArray<byte>(this.Options.BufferSize);
-				var read = Server.ReadBytes(client, buffer);
+				var read = this.ReadBytes(client, buffer);
 
 				if (read <= 0)
 				{
@@ -118,17 +118,26 @@ namespace Byrone.Xenia
 			}
 		}
 
-		private static int ReadBytes(Socket client, RentedArray<byte> buffer)
+		private int ReadBytes(Socket client, RentedArray<byte> buffer)
 		{
 			client.ReceiveTimeout = 500;
 
 			try
 			{
-				return client.Receive(buffer.AsSpan());
+				return client.Receive(buffer.AsSpan(), SocketFlags.None);
 			}
 			catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut)
 			{
 				// empty request/connection error
+				return 0;
+			}
+			catch (SocketException ex)
+			{
+				if (this.ShouldLog(LogLevel.Error))
+				{
+					this.Logger?.LogException(ex, "Receiving bytes from client threw an exception");
+				}
+
 				return 0;
 			}
 		}
