@@ -81,7 +81,7 @@ namespace Byrone.Xenia
 				var timestamp = System.DateTime.UtcNow.Ticks;
 
 				// @todo ResizableRentedArray
-				var buffer = new RentedArray<byte>(this.Options.BufferSize);
+				var buffer = new RentedArray<byte>(this.Options.GetBufferSize());
 				var read = this.ReadBytes(client, buffer);
 
 				if (read <= 0)

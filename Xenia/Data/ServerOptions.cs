@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
@@ -37,5 +38,9 @@ namespace Byrone.Xenia.Data
 			this.LogLevel = logLevel;
 			this.SupportedCompression = compression;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int GetBufferSize() =>
+			this.BufferSize == 0 ? ServerOptions.DefaultBufferSize : this.BufferSize;
 	}
 }
