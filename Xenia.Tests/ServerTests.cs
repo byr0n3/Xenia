@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Byrone.Xenia.Extensions;
@@ -45,10 +44,7 @@ namespace Xenia.Tests
 		[TestMethod]
 		public async Task ServerCanAddAndRemoveHandlersAsync()
 		{
-			if (ServerTests.server is null)
-			{
-				throw new System.Exception("Server not initialized");
-			}
+			Assert.IsNotNull(ServerTests.server);
 
 			var handler = new RequestHandler("/temp"u8, TempHandler);
 
@@ -60,7 +56,7 @@ namespace Xenia.Tests
 
 			response.Dispose();
 
-			ServerTests.server.RemoveRequestHandler(in handler);
+			Assert.IsTrue(ServerTests.server.RemoveRequestHandler(in handler));
 
 			response = await ServerTests.httpClient.GetAsync("/temp").ConfigureAwait(false);
 
@@ -117,45 +113,8 @@ namespace Xenia.Tests
 			// server would've crashed before it could write the response if the response was too big
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
-		}
 
-		[TestMethod]
-		public async Task ServerCanParseRouteParametersAsync()
-		{
-			const string slug = "test-blog-post";
-
-			ServerTests.server?.AddRequestHandler(new RequestHandler("/posts/{post}"u8, Handler));
-
-			var response = await ServerTests.httpClient.GetAsync("/posts/" + slug).ConfigureAwait(false);
-
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
-
-			return;
-
-			static void Handler(in Request request, ref ResponseBuilder builder)
-			{
-				Assert.IsTrue(request.TryGetRouteParameter("post"u8, out var parameter));
-
-				Assert.IsTrue(string.Equals(parameter.Value.ToString(), slug, System.StringComparison.Ordinal));
-
-				builder.AppendHeaders(in request, in StatusCodes.Status200OK, ContentTypes.Json);
-			}
-		}
-
-		[TestMethod]
-		public async Task ServerCanParseQueryParametersAsync()
-		{
-			const string name = "John Doe";
-			const int age = 21;
-
-			var response = await ServerTests.httpClient.GetAsync($"/query?name={name}&age={age}").ConfigureAwait(false);
-
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
-
-			var person = await response.Content.ReadFromJsonAsync(Person.TypeInfo).ConfigureAwait(false);
-
-			Assert.IsTrue(string.Equals(person.Name, name, System.StringComparison.Ordinal));
-			Assert.IsTrue(person.Age == age);
+			response.Dispose();
 		}
 
 		[TestMethod]
@@ -165,17 +124,25 @@ namespace Xenia.Tests
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/css");
 
+			response.Dispose();
+
 			response = await ServerTests.httpClient.GetAsync("/_static/js/main.js").ConfigureAwait(false);
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/javascript");
+
+			response.Dispose();
 
 			response = await ServerTests.httpClient.GetAsync("/file.txt").ConfigureAwait(false);
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/plain");
 
+			response.Dispose();
+
 			response = await ServerTests.httpClient.GetAsync("/nested/nested_file.txt").ConfigureAwait(false);
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/plain");
+
+			response.Dispose();
 		}
 	}
 }

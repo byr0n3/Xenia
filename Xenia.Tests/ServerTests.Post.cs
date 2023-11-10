@@ -1,65 +1,58 @@
-﻿using System.Net;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using Byrone.Xenia.Extensions;
+using Byrone.Xenia.Helpers;
+using HttpMethod = Byrone.Xenia.Data.HttpMethod;
 
 namespace Xenia.Tests
 {
 	public sealed partial class ServerTests
 	{
 		[TestMethod]
-		public async Task ServerCanReturnRawJsonAsync()
-		{
-			var response = await ServerTests.httpClient.GetAsync("/json").ConfigureAwait(false);
-
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
-
-			var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-			Assert.IsTrue(string.Equals(html, TestHelpers.TestJson, System.StringComparison.Ordinal));
-
-			response.Dispose();
-		}
-
-		[TestMethod]
-		public async Task ServerCanReturnJsonFromEntityAsync()
-		{
-			var response = await ServerTests.httpClient.GetAsync("/json/model").ConfigureAwait(false);
-
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
-
-			var content = await response.Content.ReadFromJsonAsync(Person.TypeInfo).ConfigureAwait(false);
-
-			Assert.IsTrue(content == TestHelpers.Person);
-
-			response.Dispose();
-		}
-
-		[TestMethod]
 		public async Task ServerCanParseAndReturnJsonAsync()
 		{
+			Assert.IsNotNull(ServerTests.server);
+
+			var handler = new RequestHandler(HttpMethod.Post, "/post/json"u8, Handler);
+
+			ServerTests.server.AddRequestHandler(in handler);
+
 			var response = await
 				ServerTests.httpClient
 						   .PostAsJsonAsync("/post/json", TestHelpers.Person)
 						   .ConfigureAwait(false);
 
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
-
-			var content = await response.Content.ReadFromJsonAsync(Person.TypeInfo).ConfigureAwait(false);
-
-			Assert.IsTrue(content == TestHelpers.Person);
-
 			response.Dispose();
+
+			Assert.IsTrue(ServerTests.server.RemoveRequestHandler(in handler));
+
+			return;
+
+			static void Handler(in Request request, ref ResponseBuilder builder)
+			{
+				Assert.IsTrue(Json.TryParse(in request, out Person model));
+
+				Assert.IsTrue(model == TestHelpers.Person);
+
+				builder.AppendHeaders(in request, in StatusCodes.Status200OK, default);
+			}
 		}
 
 		[TestMethod]
 		public async Task ServerCanParseMultipartFormDataAsync()
 		{
+			Assert.IsNotNull(ServerTests.server);
+
 			var person = new Person
 			{
 				Name = "John Doe",
 				Age = 21,
 			};
+
+			var handler = new RequestHandler(HttpMethod.Post, "/post/formdata"u8, Handler);
+
+			ServerTests.server.AddRequestHandler(in handler);
 
 			var requestContent = new MultipartFormDataContent();
 
@@ -68,11 +61,30 @@ namespace Xenia.Tests
 
 			var response = await ServerTests.httpClient.PostAsync("/post/formdata", requestContent);
 
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
+			requestContent.Dispose();
 
-			var content = await response.Content.ReadFromJsonAsync(Person.TypeInfo).ConfigureAwait(false);
+			response.Dispose();
 
-			Assert.IsTrue(content == person);
+			Assert.IsTrue(ServerTests.server.RemoveRequestHandler(in handler));
+
+			return;
+
+			void Handler(in Request request, ref ResponseBuilder builder)
+			{
+				Assert.IsTrue(MultipartFormData.TryParse(in request, out var data, out var count));
+				Assert.IsTrue(data.TryFindItem(count, "name"u8, out var name));
+				Assert.IsTrue(data.TryFindItem(count, "age"u8, out var age));
+
+				var requestPerson = new Person
+				{
+					Name = name.Content.ToString() ?? string.Empty,
+					Age = int.Parse(age.Content),
+				};
+
+				Assert.IsTrue(requestPerson == person);
+
+				builder.AppendHeaders(in request, in StatusCodes.Status200OK, default);
+			}
 		}
 	}
 }

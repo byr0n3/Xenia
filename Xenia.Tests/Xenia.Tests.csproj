@@ -24,6 +24,14 @@
 		<Compile Update="ServerTests.Html.cs">
 			<DependentUpon>ServerTests.cs</DependentUpon>
 		</Compile>
+
+		<Compile Update="ServerTests.Json.cs">
+			<DependentUpon>ServerTests.cs</DependentUpon>
+		</Compile>
+
+		<Compile Update="ServerTests.Parameters.cs">
+			<DependentUpon>ServerTests.cs</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 	<ItemGroup>

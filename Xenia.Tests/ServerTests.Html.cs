@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
+using Byrone.Xenia.Extensions;
 
 namespace Xenia.Tests
 {
@@ -22,6 +23,10 @@ namespace Xenia.Tests
 		[TestMethod]
 		public async Task ServerCanRenderRazorPageAsync()
 		{
+			Assert.IsNotNull(ServerTests.server);
+
+			ServerTests.server.AddRazorPage<TestPage>("/razor"u8);
+
 			var response = await ServerTests.httpClient.GetAsync("/razor").ConfigureAwait(false);
 
 			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/html");
@@ -32,6 +37,8 @@ namespace Xenia.Tests
 			Assert.IsTrue(html.Contains(TestHelpers.TestRazor, System.StringComparison.Ordinal));
 
 			response.Dispose();
+
+			Assert.IsTrue(ServerTests.server.RemoveRazorPage<TestPage>("/razor"u8));
 		}
 	}
 }
