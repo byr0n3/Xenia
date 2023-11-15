@@ -1,5 +1,7 @@
 # Xenia
 
+<img src="./assets/logo.png" alt="Xenia Logo">
+
 A simple, minimalistic HTTP server written in C#.
 
 ## Usage
