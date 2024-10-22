@@ -3,6 +3,8 @@
 	<Import Project="../Xenia.props"/>
 
 	<PropertyGroup>
+		<AssemblyName>Byrone.Xenia.Example</AssemblyName>
+		<RootNamespace>Byrone.Xenia.Example</RootNamespace>
 		<OutputType>Exe</OutputType>
 		<PublishAot>true</PublishAot>
 		<InvariantGlobalization>true</InvariantGlobalization>

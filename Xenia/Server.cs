@@ -3,27 +3,32 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Byrone.Xenia.Internal;
-using Byrone.Xenia.Internal.Extensions;
 using Byrone.Xenia.Utilities;
+using JetBrains.Annotations;
 
 namespace Byrone.Xenia
 {
 	public sealed partial class Server : System.IDisposable
 	{
+		public delegate IResponse RequestHandler(in Request request);
+
 		private static System.ReadOnlySpan<byte> BadRequest =>
 			"HTTP/1.1 400 Bad Request\n"u8;
 
 		private readonly Config config;
 		private readonly Socket socket;
 		private readonly ArrayPool<byte> bufferPool;
+		private readonly RequestHandler requestHandler;
 
 		/// <summary>
 		/// Create a new server instance.
 		/// </summary>
 		/// <param name="config">The configuration to use.</param>
-		public Server(Config config)
+		/// <param name="requestHandler">The callback function to call to handle a request and create a response.</param>
+		public Server(Config config, RequestHandler requestHandler)
 		{
 			this.config = config;
+			this.requestHandler = requestHandler;
 
 			this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
 			{
@@ -47,22 +52,82 @@ namespace Byrone.Xenia
 
 			while (!token.IsCancellationRequested)
 			{
-				this.Accept(token);
+				// @todo Cancel when CancellationToken gets cancelled
+				var client = this.socket.Accept();
+
+				ThreadPool.QueueUserWorkItem(this.HandleClientData, client);
 			}
 		}
 
-		private void Accept(CancellationToken token)
+		/// <summary>
+		/// Receive the request data from the given socket.
+		/// </summary>
+		/// <param name="state"><see cref="Socket"/> instance.</param>
+		/// <remarks>This function gets called using <see cref="ThreadPool.QueueUserWorkItem(WaitCallback, object?)"/>, which is why the <paramref name="state"/> parameter is an object.</remarks>
+		private void HandleClientData(object? state)
 		{
+			if (state is not Socket client)
+			{
+				return;
+			}
+
+			var ticks = System.DateTime.UtcNow.Ticks;
+
 			System.Span<byte> logBuffer = stackalloc byte[64];
 
-			// @todo Use cancellation token, somehow
-			var client = this.socket.Accept();
+			this.Log(LogLevel.Debug, logBuffer, $"[{IPv4.From(client.RemoteEndPoint)}] Connected");
 
-			this.Log(LogLevel.Debug, logBuffer, $"[{IPv4.From(client.RemoteEndPoint)}] Accepted new client");
+			var buffer = this.Receive(client, out var received);
 
+			if (received == 0)
+			{
+				// Buffer is already disposed
+
+				client.Send(Server.BadRequest);
+
+				client.Dispose();
+
+				return;
+			}
+
+			if (RequestParser.TryParse(buffer.Span.Slice(0, received), out var request))
+			{
+				var response = this.requestHandler(in request);
+
+				response.Send(client);
+
+				// ReSharper disable once SuspiciousTypeConversion.Global
+				if (response is System.IDisposable disposable)
+				{
+					disposable.Dispose();
+				}
+			}
+			else
+			{
+				this.Log(LogLevel.Warning,
+						 logBuffer,
+						 $"[{IPv4.From(client.RemoteEndPoint)}] Bad request (parse error)");
+
+				client.Send(Server.BadRequest);
+			}
+
+			buffer.Dispose();
+
+			var elapsed = System.TimeSpan.FromTicks(System.DateTime.UtcNow.Ticks - ticks);
+
+			this.Log(LogLevel.Debug,
+					 logBuffer,
+					 $"[{IPv4.From(client.RemoteEndPoint)}] Response sent, disconnecting ({elapsed.TotalMilliseconds}ms)");
+
+			client.Dispose();
+		}
+
+		[MustDisposeResource]
+		private RentedArray<byte> Receive(Socket client, out int received)
+		{
 			var buffer = new RentedArray<byte>(this.bufferPool, this.config.ReceiveBufferSize);
 
-			var received = client.Receive(buffer, SocketFlags.None, out var code);
+			received = client.Receive(buffer, SocketFlags.None, out var code);
 
 			while (client.Poll(this.config.PollInterval, SelectMode.SelectRead))
 			{
@@ -70,84 +135,25 @@ namespace Byrone.Xenia
 			}
 
 			this.Log(LogLevel.Debug,
-					 logBuffer,
+					 stackalloc byte[64],
 					 $"[{IPv4.From(client.RemoteEndPoint)}] Received {received} bytes, result code: {(int)code}");
 
 			if ((code != SocketError.Success) || (received == 0))
 			{
 				this.Log(LogLevel.Warning,
-						 logBuffer,
-						 $"[{IPv4.From(client.RemoteEndPoint)}] Bad request ({received} bytes)");
-
-				client.Send(Server.BadRequest);
-
-				client.Dispose();
-
-				return;
-			}
-
-			var context = new ClientContext(client, buffer, received);
-
-			ThreadPool.QueueUserWorkItem(this.Handle, context);
-		}
-
-		private void Handle(object? state)
-		{
-			if (state is not ClientContext context)
-			{
-				return;
-			}
-
-			var client = context.Client;
-
-			if (!RequestParser.TryParse(context.Request, out var request))
-			{
-				this.Log(LogLevel.Warning,
 						 stackalloc byte[64],
-						 $"[{IPv4.From(client.RemoteEndPoint)}] Bad request (parse error)");
+						 $"[{IPv4.From(client.RemoteEndPoint)}] Bad request: {(int)code} ({received} bytes)");
 
-				client.Send(Server.BadRequest);
+				buffer.Dispose();
 
-				client.Dispose();
-
-				return;
+				received = default;
+				return default;
 			}
 
-			// @todo Request handlers
-
-			client.Send("HTTP/1.1 200 OK\n"u8);
-
-			this.Log(LogLevel.Debug,
-					 stackalloc byte[64],
-					 $"[{IPv4.From(client.RemoteEndPoint)}] Sent response, closing.");
-
-			context.Dispose();
+			return buffer;
 		}
 
 		public void Dispose() =>
 			this.socket.Dispose();
-
-		private readonly struct ClientContext : System.IDisposable
-		{
-			public readonly Socket Client;
-			public readonly RentedArray<byte> Buffer;
-			public readonly int RequestLength;
-
-			public System.ReadOnlySpan<byte> Request =>
-				this.Buffer.Span.SliceUnsafe(0, this.RequestLength);
-
-			public ClientContext(Socket client, RentedArray<byte> buffer, int requestLength)
-			{
-				this.Client = client;
-				this.Buffer = buffer;
-				this.RequestLength = requestLength;
-			}
-
-			public void Dispose()
-			{
-				this.Buffer.Dispose();
-				this.Client.Dispose();
-			}
-		}
 	}
 }

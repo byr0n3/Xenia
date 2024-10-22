@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Internal
 {
@@ -65,6 +66,7 @@ namespace Byrone.Xenia.Internal
 		{
 		}
 
+		[MustDisposeResource]
 		public RentedArray(int size) : this(ArrayPool<T>.Shared, size)
 		{
 		}
@@ -74,6 +76,7 @@ namespace Byrone.Xenia.Internal
 		/// </summary>
 		/// <param name="pool">The <see cref="ArrayPool{T}"/> to rent from.</param>
 		/// <param name="size">The minimum length of the rented array.</param>
+		[MustDisposeResource]
 		public RentedArray(ArrayPool<T> pool, int size)
 		{
 			this.pool = pool;

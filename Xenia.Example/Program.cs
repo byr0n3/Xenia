@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using Byrone.Xenia;
+using Byrone.Xenia.Example;
 using Byrone.Xenia.Utilities;
 using Xenia.Example;
 
@@ -10,7 +11,7 @@ var config = new Config(IPv4.Local, 6969)
 	Logger = new ConsoleLogger(),
 };
 
-var server = new Server(config);
+var server = new Server(config, RequestHandler);
 
 var thread = new Thread(() => server.Run(cts.Token))
 {
@@ -32,3 +33,10 @@ while (!cts.IsCancellationRequested)
 }
 
 server.Dispose();
+
+return;
+
+static IResponse RequestHandler(in Request request)
+{
+	return new Response();
+}
