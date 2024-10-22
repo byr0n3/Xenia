@@ -1,126 +1,34 @@
-﻿using System.Text;
-using System.Threading;
-using Byrone.Xenia.Data;
-using Byrone.Xenia.Extensions;
-using Byrone.Xenia.Helpers;
+﻿using System.Threading;
+using Byrone.Xenia;
+using Byrone.Xenia.Utilities;
+using Xenia.Example;
 
-namespace Byrone.Xenia.Example
+var cts = new CancellationTokenSource();
+
+var config = new Config(IPv4.Local, 5000)
 {
-	internal static class Program
+	Logger = new ConsoleLogger(),
+};
+
+var server = new Server(config);
+
+var thread = new Thread(() => server.Run(cts.Token))
+{
+	IsBackground = true,
+	Name = "Xenia Server Thread",
+};
+thread.Start();
+
+while (!cts.IsCancellationRequested)
+{
+	if (System.Console.ReadKey().Key != System.ConsoleKey.Escape)
 	{
-		public static void Main(string[] args)
-		{
-			var cancelTokenSource = new CancellationTokenSource();
-
-			var options = new ServerOptions("0.0.0.0", 6969, new ConsoleLogger())
-			{
-				StaticFiles = new StaticFileDirectory[] { new("_static") },
-			};
-
-			var server = new Server(options, cancelTokenSource.Token);
-
-			server.AddRazorPage<Test>("/"u8);
-			server.AddRazorPage<Test>("/test"u8);
-			server.AddRazorPage<Test>("/posts2/{post}"u8);
-
-			server.AddRequestHandler(new RequestHandler("/html"u8, Program.RawHtmlHandler));
-			server.AddRequestHandler(new RequestHandler("/posts/{post}"u8, Program.RouteParametersHandler));
-			server.AddRequestHandler(new RequestHandler("/json"u8, Program.JsonHandler));
-			server.AddRequestHandler(new RequestHandler(HttpMethod.Post, "/post"u8, Program.PostHandler));
-			server.AddRequestHandler(new RequestHandler("/resize"u8, Program.ResizeHandler));
-
-			var thread = new Thread(server.Listen);
-
-			thread.Start();
-		}
-
-		private static void RawHtmlHandler(in Request request, ref ResponseBuilder response)
-		{
-			var html = $"<html><body><h1>Hello from {request.Path}!</h1></html></body>";
-
-			response.AppendHtml(in request, in StatusCodes.Status200OK, html);
-		}
-
-		private static void RouteParametersHandler(in Request request, ref ResponseBuilder response)
-		{
-			var html = "<html><body><ul>";
-
-			foreach (var parameter in request.RouteParameters)
-			{
-				html += $"<li>{parameter.Key}: {parameter.Value}</li>";
-			}
-
-			html += "</ul></html></body>";
-
-			response.AppendHtml(in request, in StatusCodes.Status200OK, html);
-		}
-
-		private static void JsonHandler(in Request request, ref ResponseBuilder response)
-		{
-			var json = "{\"test\": \"Hello there!\", \"number\": 69}";
-
-			var jsonSize = Encoding.UTF8.GetByteCount(json);
-
-			response.AppendHeaders(in request, in StatusCodes.Status200OK, ContentTypes.Json);
-
-			var span = response.Take(jsonSize);
-
-			var written = Encoding.UTF8.GetBytes(json, span);
-
-			response.Move(written);
-		}
-
-		private static void PostHandler(in Request request, ref ResponseBuilder builder)
-		{
-			if (MultipartFormData.TryParse(in request, out var data, out var count))
-			{
-				for (var i = 0; i < count; i++)
-				{
-					var item = data[i];
-
-					System.Console.WriteLine(item.Name + ": " + item.Content);
-				}
-
-				data.Dispose();
-
-				builder.AppendHeaders(in request, in StatusCodes.Status204NoContent, default);
-				return;
-			}
-
-			if (Json.TryParse(in request, out Person body))
-			{
-				builder.AppendJson(in request, in StatusCodes.Status200OK, body);
-				return;
-			}
-
-			builder.AppendHeaders(in request, in StatusCodes.Status500InternalServerError, default);
-		}
-
-		private static void ResizeHandler(in Request request, ref ResponseBuilder builder)
-		{
-			const int size = 10000;
-
-			builder.AppendHeaders(in request, in StatusCodes.Status200OK, ContentTypes.Json);
-
-			builder.Append('[');
-
-			for (var i = 0; i < size; i++)
-			{
-				var person = new Person
-				{
-					Name = "Person " + i,
-					Age = i,
-				};
-
-				builder.Append(person);
-
-				if (i < size - 1)
-				{
-					builder.Append(',');
-				}
-			}
-
-			builder.Append(']');
-		}
+		// @todo Sleep?
+		return;
 	}
+
+	cts.Cancel();
+	break;
 }
+
+server.Dispose();
