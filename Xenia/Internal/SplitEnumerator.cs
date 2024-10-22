@@ -25,6 +25,35 @@ namespace Byrone.Xenia.Internal
 		public readonly SplitEnumerator GetEnumerator() =>
 			this;
 
+		public int Count()
+		{
+			var span = this.span;
+
+			var count = 0;
+
+			while (this.MoveNext())
+			{
+				if (this.Current.IsEmpty)
+				{
+					break;
+				}
+
+				count++;
+			}
+
+			this.span = span;
+
+			return count;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public System.ReadOnlySpan<byte> MoveNextAndGet()
+		{
+			this.MoveNext();
+
+			return this.Current;
+		}
+
 		public bool MoveNext()
 		{
 			if (this.span.IsEmpty)

@@ -60,9 +60,14 @@ namespace Byrone.Xenia
 
 			this.Log(LogLevel.Debug, logBuffer, $"[{IPv4.From(client.RemoteEndPoint)}] Accepted new client");
 
-			var buffer = new RentedArray(this.bufferPool, this.config.ReceiveBufferSize);
+			var buffer = new RentedArray<byte>(this.bufferPool, this.config.ReceiveBufferSize);
 
 			var received = client.Receive(buffer, SocketFlags.None, out var code);
+
+			while (client.Poll(this.config.PollInterval, SelectMode.SelectRead))
+			{
+				received += client.Receive(buffer.Span.Slice(received), SocketFlags.None, out _);
+			}
 
 			this.Log(LogLevel.Debug,
 					 logBuffer,
@@ -95,7 +100,20 @@ namespace Byrone.Xenia
 
 			var client = context.Client;
 
-			// @todo Parse request
+			if (!RequestParser.TryParse(context.Request, out var request))
+			{
+				this.Log(LogLevel.Warning,
+						 stackalloc byte[64],
+						 $"[{IPv4.From(client.RemoteEndPoint)}] Bad request (parse error)");
+
+				client.Send(Server.BadRequest);
+
+				client.Dispose();
+
+				return;
+			}
+
+			// @todo Request handlers
 
 			client.Send("HTTP/1.1 200 OK\n"u8);
 
@@ -112,13 +130,13 @@ namespace Byrone.Xenia
 		private readonly struct ClientContext : System.IDisposable
 		{
 			public readonly Socket Client;
-			public readonly RentedArray Buffer;
+			public readonly RentedArray<byte> Buffer;
 			public readonly int RequestLength;
 
 			public System.ReadOnlySpan<byte> Request =>
 				this.Buffer.Span.SliceUnsafe(0, this.RequestLength);
 
-			public ClientContext(Socket client, RentedArray buffer, int requestLength)
+			public ClientContext(Socket client, RentedArray<byte> buffer, int requestLength)
 			{
 				this.Client = client;
 				this.Buffer = buffer;

@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 
 namespace Byrone.Xenia.Internal
 {
-	internal readonly struct RentedArray : System.IDisposable
+	internal readonly struct RentedArray<T> : System.IDisposable
 	{
 		private readonly int size;
-		private readonly byte[]? array;
-		private readonly ArrayPool<byte>? pool;
+		private readonly T[]? array;
+		private readonly ArrayPool<T>? pool;
 
 		/// <summary>
 		/// Checks if <see name="array"/> and <see cref="pool"/> are not null.
@@ -25,7 +25,7 @@ namespace Byrone.Xenia.Internal
 		/// <summary>
 		/// The entire rented <see cref="array"/>.
 		/// </summary>
-		public System.Span<byte> Array
+		public System.Span<T> Array
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
@@ -39,7 +39,7 @@ namespace Byrone.Xenia.Internal
 		/// <summary>
 		/// A slice of the rented <see cref="array"/>, starting from the first element with a length of <see cref="size"/>.
 		/// </summary>
-		public System.Span<byte> Span
+		public System.Span<T> Span
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
@@ -50,12 +50,22 @@ namespace Byrone.Xenia.Internal
 			}
 		}
 
+		public ref T this[int index]
+		{
+			get
+			{
+				Debug.Assert(this.IsValid);
+
+				return ref this.array[index];
+			}
+		}
+
 		[System.Obsolete("Use constructor with arguments instead.", true)]
 		public RentedArray()
 		{
 		}
 
-		public RentedArray(int size) : this(ArrayPool<byte>.Shared, size)
+		public RentedArray(int size) : this(ArrayPool<T>.Shared, size)
 		{
 		}
 
@@ -64,7 +74,7 @@ namespace Byrone.Xenia.Internal
 		/// </summary>
 		/// <param name="pool">The <see cref="ArrayPool{T}"/> to rent from.</param>
 		/// <param name="size">The minimum length of the rented array.</param>
-		public RentedArray(ArrayPool<byte> pool, int size)
+		public RentedArray(ArrayPool<T> pool, int size)
 		{
 			this.pool = pool;
 			this.size = size;
@@ -81,7 +91,7 @@ namespace Byrone.Xenia.Internal
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator System.Span<byte>(RentedArray array) =>
+		public static implicit operator System.Span<T>(RentedArray<T> array) =>
 			array.Span;
 	}
 }

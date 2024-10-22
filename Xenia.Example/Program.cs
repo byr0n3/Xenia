@@ -5,7 +5,7 @@ using Xenia.Example;
 
 var cts = new CancellationTokenSource();
 
-var config = new Config(IPv4.Local, 5000)
+var config = new Config(IPv4.Local, 6969)
 {
 	Logger = new ConsoleLogger(),
 };

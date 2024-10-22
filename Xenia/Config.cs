@@ -30,6 +30,12 @@ namespace Byrone.Xenia
 		/// <remarks>If the logger is `null` (default), no information will be logged.</remarks>
 		public ILogger? Logger { get; init; }
 
+		/// <summary>
+		/// The time to wait for a response, in microseconds.
+		/// </summary>
+		/// <remarks>You could technically put this to '0' to not wait for additional request data, however this <i>could</i> cause loss-of-data.</remarks>
+		public int PollInterval { get; init; } = 100;
+
 		[System.Obsolete("Use constructor with arguments instead.", true)]
 		public Config()
 		{
