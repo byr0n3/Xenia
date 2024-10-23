@@ -33,6 +33,10 @@ namespace Byrone.Xenia
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void Log(System.Exception ex) =>
+			this.config.Logger?.LogException(ex);
+
 		private enum LogLevel
 		{
 			Debug,

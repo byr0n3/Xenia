@@ -6,8 +6,14 @@ namespace Byrone.Xenia.Example
 	{
 		public void Send(Socket client)
 		{
-			client.Send(
-				"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>Hello world!</h1></body></html>"u8);
+			var response = """
+						   HTTP/1.1 200 OK
+						   Content-Type: text/html
+
+						   <html><body><h1>Hello world!</h1></body></html>
+						   """u8;
+
+			client.Send(response);
 		}
 	}
 }

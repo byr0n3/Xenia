@@ -15,15 +15,15 @@ namespace Byrone.Xenia.Utilities
 									  System.IComparable<DateTime>,
 									  System.IUtf8SpanParsable<DateTime>
 	{
-		[FieldOffset(0)] private readonly System.DateTime value;
+		[FieldOffset(0)] public readonly System.DateTime Value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public DateTime(System.DateTime value) =>
-			this.value = value;
+			this.Value = value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public DateTime(int year, int month, int day) =>
-			this.value = new System.DateTime(year, month, day);
+			this.Value = new System.DateTime(year, month, day);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator DateTime(System.DateTime value) =>
@@ -35,7 +35,7 @@ namespace Byrone.Xenia.Utilities
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(DateTime other) =>
-			this.value.Equals(other.value);
+			this.Value.Equals(other.Value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj) =>
@@ -43,7 +43,7 @@ namespace Byrone.Xenia.Utilities
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode() =>
-			this.value.GetHashCode();
+			this.Value.GetHashCode();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(DateTime left, DateTime right) =>
@@ -55,7 +55,7 @@ namespace Byrone.Xenia.Utilities
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int CompareTo(DateTime other) =>
-			this.value.CompareTo(other.value);
+			this.Value.CompareTo(other.Value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator <(DateTime left, DateTime right) =>

@@ -17,8 +17,12 @@ namespace Byrone.Xenia
 
 		private readonly Config config;
 		private readonly Socket socket;
-		private readonly ArrayPool<byte> bufferPool;
 		private readonly RequestHandler requestHandler;
+
+		private readonly ArrayPool<byte> bufferPool;
+		private readonly RentedArray<byte> logBuffer;
+
+		private bool disposed;
 
 		/// <summary>
 		/// Create a new server instance.
@@ -35,28 +39,49 @@ namespace Byrone.Xenia
 				ReceiveBufferSize = config.ReceiveBufferSize,
 			};
 
+			this.logBuffer = new RentedArray<byte>(128);
 			this.bufferPool = ArrayPool<byte>.Create(config.ReceiveBufferSize, 10);
 		}
 
 		/// <summary>
 		/// Bind to the <see cref="Config.Address"/> configured in the <see cref="Config"/> amd start accepting clients.
 		/// </summary>
-		/// <param name="token">Cancellation token.</param>
-		/// <remarks>This call <b>IS</b> blocking and will block the current thread until the given <paramref name="token"/> is cancelled.</remarks>
-		public void Run(CancellationToken token = default)
+		/// <remarks>This call <b>IS</b> blocking and will block the current thread until the server gets disposed.</remarks>
+		public void Run()
+		{
+			const int interruptedCode = 4;
+
+			this.Bind();
+
+			while (!this.disposed)
+			{
+				try
+				{
+					var client = this.socket.Accept();
+
+					ThreadPool.QueueUserWorkItem(this.HandleClient, client);
+				}
+				catch (SocketException ex)
+				{
+					// If the ErrorCode is 4, the server got manually stopped, no error occured.
+					if (ex.ErrorCode != interruptedCode)
+					{
+						this.Log(ex);
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Bind to the configured IP and port and start listening.
+		/// </summary>
+		/// <remarks>This is put in a separate function so the stackalloc-ed buffer instantly gets released.</remarks>
+		private void Bind()
 		{
 			this.socket.Bind((EndPoint)this.config.Address);
 			this.socket.Listen(this.config.Backlog);
 
-			this.Log(LogLevel.Info, stackalloc byte[64], $"Listening on: http://{this.config.Address}");
-
-			while (!token.IsCancellationRequested)
-			{
-				// @todo Cancel when CancellationToken gets cancelled
-				var client = this.socket.Accept();
-
-				ThreadPool.QueueUserWorkItem(this.HandleClientData, client);
-			}
+			this.Log(LogLevel.Info, this.logBuffer, $"Listening on: http://{this.config.Address}");
 		}
 
 		/// <summary>
@@ -64,7 +89,7 @@ namespace Byrone.Xenia
 		/// </summary>
 		/// <param name="state"><see cref="Socket"/> instance.</param>
 		/// <remarks>This function gets called using <see cref="ThreadPool.QueueUserWorkItem(WaitCallback, object?)"/>, which is why the <paramref name="state"/> parameter is an object.</remarks>
-		private void HandleClientData(object? state)
+		private void HandleClient(object? state)
 		{
 			if (state is not Socket client)
 			{
@@ -73,9 +98,7 @@ namespace Byrone.Xenia
 
 			var ticks = System.DateTime.UtcNow.Ticks;
 
-			System.Span<byte> logBuffer = stackalloc byte[64];
-
-			this.Log(LogLevel.Debug, logBuffer, $"[{IPv4.From(client.RemoteEndPoint)}] Connected");
+			this.Log(LogLevel.Debug, this.logBuffer, $"[{IPv4.From(client.RemoteEndPoint)}] Accepted");
 
 			var buffer = this.Receive(client, out var received);
 
@@ -105,7 +128,7 @@ namespace Byrone.Xenia
 			else
 			{
 				this.Log(LogLevel.Warning,
-						 logBuffer,
+						 this.logBuffer,
 						 $"[{IPv4.From(client.RemoteEndPoint)}] Bad request (parse error)");
 
 				client.Send(Server.BadRequest);
@@ -116,8 +139,8 @@ namespace Byrone.Xenia
 			var elapsed = System.TimeSpan.FromTicks(System.DateTime.UtcNow.Ticks - ticks);
 
 			this.Log(LogLevel.Debug,
-					 logBuffer,
-					 $"[{IPv4.From(client.RemoteEndPoint)}] Response sent, disconnecting ({elapsed.TotalMilliseconds}ms)");
+					 this.logBuffer,
+					 $"[{IPv4.From(client.RemoteEndPoint)}] Response sent ({elapsed.TotalMilliseconds}ms)");
 
 			client.Dispose();
 		}
@@ -129,20 +152,18 @@ namespace Byrone.Xenia
 
 			received = client.Receive(buffer, SocketFlags.None, out var code);
 
-			while (client.Poll(this.config.PollInterval, SelectMode.SelectRead))
+			// Client might send some delayed data
+			while ((received < buffer.Size) && client.Poll(this.config.PollInterval, SelectMode.SelectRead))
 			{
 				received += client.Receive(buffer.Span.Slice(received), SocketFlags.None, out _);
 			}
 
-			this.Log(LogLevel.Debug,
-					 stackalloc byte[64],
-					 $"[{IPv4.From(client.RemoteEndPoint)}] Received {received} bytes, result code: {(int)code}");
+			this.Log(LogLevel.Debug, this.logBuffer, $"[{IPv4.From(client.RemoteEndPoint)}] Received {received}b");
 
+			// ReSharper disable once InvertIf
 			if ((code != SocketError.Success) || (received == 0))
 			{
-				this.Log(LogLevel.Warning,
-						 stackalloc byte[64],
-						 $"[{IPv4.From(client.RemoteEndPoint)}] Bad request: {(int)code} ({received} bytes)");
+				this.Log(LogLevel.Warning, this.logBuffer, $"[{IPv4.From(client.RemoteEndPoint)}] Error: {(int)code}");
 
 				buffer.Dispose();
 
@@ -153,7 +174,17 @@ namespace Byrone.Xenia
 			return buffer;
 		}
 
-		public void Dispose() =>
+		public void Dispose()
+		{
+			if (this.disposed)
+			{
+				return;
+			}
+
+			this.disposed = true;
+
 			this.socket.Dispose();
+			this.logBuffer.Dispose();
+		}
 	}
 }

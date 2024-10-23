@@ -9,9 +9,10 @@ namespace Byrone.Xenia.Internal
 {
 	internal readonly struct RentedArray<T> : System.IDisposable
 	{
-		private readonly int size;
 		private readonly T[]? array;
 		private readonly ArrayPool<T>? pool;
+
+		public readonly int Size;
 
 		/// <summary>
 		/// Checks if <see name="array"/> and <see cref="pool"/> are not null.
@@ -38,7 +39,7 @@ namespace Byrone.Xenia.Internal
 		}
 
 		/// <summary>
-		/// A slice of the rented <see cref="array"/>, starting from the first element with a length of <see cref="size"/>.
+		/// A slice of the rented <see cref="array"/>, starting from the first element with a length of <see cref="Size"/>.
 		/// </summary>
 		public System.Span<T> Span
 		{
@@ -47,7 +48,7 @@ namespace Byrone.Xenia.Internal
 			{
 				Debug.Assert(this.IsValid);
 
-				return MemoryMarshal.CreateSpan(ref this.array[0], this.size);
+				return MemoryMarshal.CreateSpan(ref this.array[0], this.Size);
 			}
 		}
 
@@ -80,7 +81,7 @@ namespace Byrone.Xenia.Internal
 		public RentedArray(ArrayPool<T> pool, int size)
 		{
 			this.pool = pool;
-			this.size = size;
+			this.Size = size;
 
 			this.array = pool.Rent(size);
 		}

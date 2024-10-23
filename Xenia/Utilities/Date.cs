@@ -14,15 +14,15 @@ namespace Byrone.Xenia.Utilities
 	[StructLayout(LayoutKind.Explicit)]
 	public readonly struct Date : System.IEquatable<Date>, System.IComparable<Date>, System.IUtf8SpanParsable<Date>
 	{
-		[FieldOffset(0)] private readonly System.DateOnly value;
+		[FieldOffset(0)] public readonly System.DateOnly Value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Date(System.DateOnly value) =>
-			this.value = value;
+			this.Value = value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Date(int year, int month, int day) =>
-			this.value = new System.DateOnly(year, month, day);
+			this.Value = new System.DateOnly(year, month, day);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Date(System.DateOnly value) =>
@@ -34,7 +34,7 @@ namespace Byrone.Xenia.Utilities
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Date other) =>
-			this.value.Equals(other.value);
+			this.Value.Equals(other.Value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj) =>
@@ -42,7 +42,7 @@ namespace Byrone.Xenia.Utilities
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode() =>
-			this.value.GetHashCode();
+			this.Value.GetHashCode();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Date left, Date right) =>
@@ -54,7 +54,7 @@ namespace Byrone.Xenia.Utilities
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int CompareTo(Date other) =>
-			this.value.CompareTo(other.value);
+			this.Value.CompareTo(other.Value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator <(Date left, Date right) =>

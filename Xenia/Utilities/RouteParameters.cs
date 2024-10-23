@@ -37,6 +37,15 @@ namespace Byrone.Xenia.Utilities
 		}
 
 		/// <summary>
+		/// Get the value of the requested parameter.
+		/// </summary>
+		/// <param name="key">The key of the parameter to find.</param>
+		/// <returns>The value of the parameter, or <see langword="default"/> when not found.</returns>
+		/// <example><c>var post = routeParams.Get("post"u8);</c></example>
+		public System.ReadOnlySpan<byte> Get(scoped System.ReadOnlySpan<byte> key) =>
+			this.TryGet(key, out var result) ? result : default;
+
+		/// <summary>
 		/// Try to get the value of the requested parameter.
 		/// </summary>
 		/// <param name="key">The key of the parameter to find.</param>
@@ -66,6 +75,15 @@ namespace Byrone.Xenia.Utilities
 		}
 
 		/// <summary>
+		/// Get the value of the requested parameter and parse it to <typeparamref name="T"/>.
+		/// </summary>
+		/// <param name="key">The key of the parameter to find.</param>
+		/// <returns>The value of the parameter, or <see langword="default"/> when not found or if unable to parse.</returns>
+		/// <example><c>var post = routeParams.Get("post"u8);</c></example>
+		public T? Get<T>(scoped System.ReadOnlySpan<byte> key) where T : System.IUtf8SpanParsable<T> =>
+			this.TryGet<T>(key, out var result) ? result : default;
+
+		/// <summary>
 		/// Try to get the value of the requested parameter and parse it to <typeparamref name="T"/>.
 		/// </summary>
 		/// <param name="key">The key of the parameter to find.</param>
@@ -75,13 +93,13 @@ namespace Byrone.Xenia.Utilities
 		public bool TryGet<T>(scoped System.ReadOnlySpan<byte> key, [NotNullWhen(true)] out T? value)
 			where T : System.IUtf8SpanParsable<T>
 		{
-			if (!this.TryGet(key, out var @param))
+			if (!this.TryGet(key, out var param))
 			{
 				value = default;
 				return false;
 			}
 
-			return T.TryParse(@param, CultureInfo.InvariantCulture, out value);
+			return T.TryParse(param, CultureInfo.InvariantCulture, out value);
 		}
 
 		// Finds the index of the delimiter (start) before the value.
