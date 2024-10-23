@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="../Xenia.props"/>
+
+	<PropertyGroup>
+		<AssemblyName>Byrone.Xenia.Encoding</AssemblyName>
+		<RootNamespace>Byrone.Xenia</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Xenia\Xenia.csproj"/>
+	</ItemGroup>
+
+</Project>

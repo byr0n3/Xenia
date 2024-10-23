@@ -42,6 +42,36 @@ namespace Byrone.Xenia
 			this.headerData = headers;
 		}
 
+		/// <summary>
+		/// Get the value of the header defined by <paramref name="key"/>.
+		/// </summary>
+		/// <param name="key">The name of the header to find.</param>
+		/// <returns>The header value when found, <see langword="default"/> otherwise.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public System.ReadOnlySpan<byte> GetHeader(scoped System.ReadOnlySpan<byte> key) =>
+			this.TryGetHeader(key, out var result) ? result : default;
+
+		/// <summary>
+		/// Try to get the value of the header defined by <paramref name="key"/>.
+		/// </summary>
+		/// <param name="key">The name of the header to find.</param>
+		/// <param name="result">The header value when found, <see langword="default"/> otherwise.</param>
+		/// <returns><see langword="true"/> if the header was found, <see langword="false"/> otherwise.</returns>
+		public bool TryGetHeader(scoped System.ReadOnlySpan<byte> key, out System.ReadOnlySpan<byte> result)
+		{
+			foreach (var header in this.Headers)
+			{
+				if (System.MemoryExtensions.SequenceEqual(header.Key, key))
+				{
+					result = header.Value;
+					return true;
+				}
+			}
+
+			result = default;
+			return false;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose() =>
 			this.headerData.Dispose();

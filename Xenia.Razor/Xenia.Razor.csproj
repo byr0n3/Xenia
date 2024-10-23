@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="../Xenia.props"/>
+
+	<PropertyGroup>
+		<AssemblyName>Byrone.Xenia.Razor</AssemblyName>
+		<RootNamespace>Byrone.Xenia</RootNamespace>
+	</PropertyGroup>
+
+</Project>

@@ -18,7 +18,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xenia.JSON", "Xenia.JSON\Xe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xenia.Razor", "Xenia.Razor\Xenia.Razor.csproj", "{6D68DF49-BE40-4C9D-B3FB-8AB58CA57D3A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xenia.Compression", "Xenia.Compression\Xenia.Compression.csproj", "{5195D1B8-6B79-4E95-921B-C868FB586113}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xenia.Encoding", "Xenia.Encoding\Xenia.Encoding.csproj", "{5195D1B8-6B79-4E95-921B-C868FB586113}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

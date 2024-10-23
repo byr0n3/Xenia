@@ -1,52 +1,22 @@
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 using Byrone.Xenia.Internal;
-using Byrone.Xenia.Utilities;
 
 namespace Byrone.Xenia.Tests
 {
-	public sealed class ServerTests : System.IDisposable
+	public sealed class ServerTests : BaseServerTests
 	{
-		private readonly Server server;
-		private readonly Thread thread;
-		private readonly HttpClient httpClient;
-
-		public ServerTests()
+		public ServerTests() : base(6000)
 		{
-			const int port = 6969;
-
-			var config = new Config(IPv4.Local, port);
-			this.server = new Server(config, ServerTests.RequestHandler);
-
-			this.thread = new Thread(this.server.Run)
-			{
-				IsBackground = true,
-				Name = "Xenia Test Server Thread",
-			};
-			this.thread.Start();
-
-			this.httpClient = new HttpClient
-			{
-				BaseAddress = new System.Uri($"http://localhost:{port}/", System.UriKind.Absolute),
-			};
-		}
-
-		public void Dispose()
-		{
-			this.server.Dispose();
-			this.thread.Join();
-
-			this.httpClient.Dispose();
 		}
 
 		[Fact]
 		public async Task ServerCanHandleGetRequest()
 		{
 			using (var request = new HttpRequestMessage(HttpMethod.Get, "/"))
-			using (var response = await this.httpClient.SendAsync(request))
+			using (var response = await this.HttpClient.SendAsync(request))
 			{
 				Assert.True(response.IsSuccessStatusCode);
 
@@ -68,7 +38,7 @@ namespace Byrone.Xenia.Tests
 			{
 				request.Content = new StringContent(requestContent, System.Text.Encoding.UTF8, "text/html");
 
-				using (var response = await this.httpClient.SendAsync(request))
+				using (var response = await this.HttpClient.SendAsync(request))
 				{
 					Assert.True(response.IsSuccessStatusCode);
 
@@ -82,7 +52,7 @@ namespace Byrone.Xenia.Tests
 			}
 		}
 
-		private static IResponse RequestHandler(in Request request)
+		protected override IResponse RequestHandler(in Request request)
 		{
 			if (System.MemoryExtensions.SequenceEqual(request.Method, "POST"u8))
 			{
