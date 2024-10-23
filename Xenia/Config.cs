@@ -1,9 +1,11 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Byrone.Xenia.Utilities;
+using JetBrains.Annotations;
 
 namespace Byrone.Xenia
 {
+	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct Config
 	{

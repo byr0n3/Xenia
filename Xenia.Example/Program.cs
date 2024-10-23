@@ -2,7 +2,6 @@
 using Byrone.Xenia;
 using Byrone.Xenia.Example;
 using Byrone.Xenia.Utilities;
-using Xenia.Example;
 
 var cts = new CancellationTokenSource();
 
@@ -38,5 +37,16 @@ return;
 
 static IResponse RequestHandler(in Request request)
 {
+	var routes = new RouteCollection([
+		"/"u8,
+		"/blog"u8,
+		"/blog/{post}"u8,
+	]);
+
+	if (routes.TryFind(request.Path, out var pattern))
+	{
+		// @todo Handle
+	}
+
 	return new Response();
 }

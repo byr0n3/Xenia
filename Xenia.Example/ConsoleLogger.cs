@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
-using Byrone.Xenia;
 
-namespace Xenia.Example
+namespace Byrone.Xenia.Example
 {
 	internal sealed class ConsoleLogger : ILogger
 	{

@@ -1,3 +1,4 @@
+using System.Buffers.Text;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
@@ -5,12 +6,14 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Unicode;
 using Byrone.Xenia.Internal;
+using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Utilities
 {
 	/// <summary>
 	/// Represents an IP.
 	/// </summary>
+	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
 	[SuppressMessage("ReSharper", "InconsistentNaming")]
 	public readonly struct IPv4 : System.IEquatable<IPv4>,
@@ -148,7 +151,7 @@ namespace Byrone.Xenia.Utilities
 
 			foreach (var part in new SplitEnumerator(span, (byte)'.'))
 			{
-				if (!Binary.TryParseByte(part, out var @byte))
+				if (!Utf8Parser.TryParse(part, out byte @byte, out _))
 				{
 					result = default;
 					return false;
@@ -174,7 +177,11 @@ namespace Byrone.Xenia.Utilities
 
 			foreach (var part in new SplitEnumerator(span, (byte)'.'))
 			{
-				temp[written++] = Binary.ParseByte(part);
+				var parsed = Utf8Parser.TryParse(part, out byte @byte, out var __);
+
+				Debug.Assert(parsed);
+
+				temp[written++] = @byte;
 			}
 
 			return new IPv4(temp);

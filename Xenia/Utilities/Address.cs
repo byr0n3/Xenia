@@ -2,12 +2,14 @@ using System.Globalization;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Utilities
 {
 	/// <summary>
 	/// Represents an IP (<see cref="IPv4"/>) and a port.
 	/// </summary>
+	[PublicAPI]
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly struct Address : System.IEquatable<Address>, System.IUtf8SpanFormattable, System.ISpanFormattable
 	{

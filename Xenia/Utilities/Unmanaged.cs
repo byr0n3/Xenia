@@ -31,5 +31,9 @@ namespace Byrone.Xenia.Utilities
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Unmanaged(System.ReadOnlySpan<byte> value) =>
 			new(value);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator System.ReadOnlySpan<byte>(Unmanaged value) =>
+			value.Managed;
 	}
 }
