@@ -27,7 +27,7 @@ namespace Byrone.Xenia.Internal
 
 		public int Count()
 		{
-			var span = this.span;
+			var current = this.span;
 
 			var count = 0;
 
@@ -41,7 +41,7 @@ namespace Byrone.Xenia.Internal
 				count++;
 			}
 
-			this.span = span;
+			this.span = current;
 
 			return count;
 		}
