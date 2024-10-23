@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Internal
 {
+	[MustDisposeResource]
 	internal readonly struct RentedArray<T> : System.IDisposable
 	{
 		private readonly T[]? array;
@@ -54,6 +55,7 @@ namespace Byrone.Xenia.Internal
 
 		public ref T this[int index]
 		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
 			{
 				Debug.Assert(this.IsValid);
@@ -67,7 +69,6 @@ namespace Byrone.Xenia.Internal
 		{
 		}
 
-		[MustDisposeResource]
 		public RentedArray(int size) : this(ArrayPool<T>.Shared, size)
 		{
 		}
@@ -77,7 +78,6 @@ namespace Byrone.Xenia.Internal
 		/// </summary>
 		/// <param name="pool">The <see cref="ArrayPool{T}"/> to rent from.</param>
 		/// <param name="size">The minimum length of the rented array.</param>
-		[MustDisposeResource]
 		public RentedArray(ArrayPool<T> pool, int size)
 		{
 			this.pool = pool;
@@ -86,6 +86,7 @@ namespace Byrone.Xenia.Internal
 			this.array = pool.Rent(size);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
 			if (this.IsValid)

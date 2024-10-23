@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 
 namespace Byrone.Xenia
 {
+	[MustDisposeResource]
 	public sealed partial class Server : System.IDisposable
 	{
 		public delegate IResponse RequestHandler(in Request request);
@@ -133,6 +134,8 @@ namespace Byrone.Xenia
 
 				client.Send(Server.BadRequest);
 			}
+
+			request.Dispose();
 
 			buffer.Dispose();
 

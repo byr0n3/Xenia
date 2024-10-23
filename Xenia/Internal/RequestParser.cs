@@ -1,14 +1,15 @@
 using System.Collections.Generic;
 using Byrone.Xenia.Utilities;
+using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Internal
 {
 	internal static class RequestParser
 	{
 		private static System.ReadOnlySpan<byte> BodySeparator =>
-			"\n\n"u8;
+			"\r\n\r\n"u8;
 
-		public static bool TryParse(System.ReadOnlySpan<byte> data, out Request request)
+		public static bool TryParse(System.ReadOnlySpan<byte> data, [MustDisposeResource] out Request request)
 		{
 			var bodyIdx = System.MemoryExtensions.IndexOf(data, RequestParser.BodySeparator);
 			var body = bodyIdx == -1 ? default : data.Slice(bodyIdx + RequestParser.BodySeparator.Length);
@@ -18,7 +19,7 @@ namespace Byrone.Xenia.Internal
 				data = data.Slice(0, bodyIdx);
 			}
 
-			var enumerator = new SplitEnumerator(data, (byte)'\n');
+			var enumerator = new SpanSplitEnumerator(data, "\r\n"u8);
 			enumerator.MoveNext();
 
 			var httpEnumerator = new SplitEnumerator(enumerator.Current, (byte)' ');
@@ -32,7 +33,8 @@ namespace Byrone.Xenia.Internal
 			return true;
 		}
 
-		private static RentedArray<KeyValuePair<Unmanaged, Unmanaged>> GetHeaders(SplitEnumerator enumerator)
+		[MustDisposeResource]
+		private static RentedArray<KeyValuePair<Unmanaged, Unmanaged>> GetHeaders(SpanSplitEnumerator enumerator)
 		{
 			var headers = new RentedArray<KeyValuePair<Unmanaged, Unmanaged>>(enumerator.Count());
 

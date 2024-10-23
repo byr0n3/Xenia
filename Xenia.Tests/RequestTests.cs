@@ -7,7 +7,7 @@ namespace Byrone.Xenia.Tests
 		[Fact]
 		public void CanParseGetRequests()
 		{
-			var data = "GET / HTTP/1.1\nHost: test.xenia\nUser-Agent: Xenia-Test\n\n"u8;
+			var data = "GET / HTTP/1.1\r\nHost: test.xenia\r\nUser-Agent: Xenia-Test\r\n\r\n"u8;
 
 			var parsed = RequestParser.TryParse(data, out var request);
 
@@ -26,13 +26,15 @@ namespace Byrone.Xenia.Tests
 			Assert.Equal("Xenia-Test"u8, request.Headers[1].Value.Managed);
 
 			Assert.Equal(default, request.Body);
+
+			request.Dispose();
 		}
 
 		[Fact]
 		public void CanParsePostRequests()
 		{
 			var data =
-				"POST /form HTTP/1.1\nHost: test.xenia\nUser-Agent: Xenia-Test\nContent-Type: application\\json\n\n{\"data\": \"Hello world!\"}"u8;
+				"POST /form HTTP/1.1\r\nHost: test.xenia\r\nUser-Agent: Xenia-Test\r\nContent-Type: application\\json\r\n\r\n{\"data\": \"Hello world!\"}"u8;
 
 			var parsed = RequestParser.TryParse(data, out var request);
 
@@ -54,6 +56,8 @@ namespace Byrone.Xenia.Tests
 			Assert.Equal("application\\json"u8, request.Headers[2].Value.Managed);
 
 			Assert.Equal("{\"data\": \"Hello world!\"}"u8, request.Body);
+
+			request.Dispose();
 		}
 	}
 }

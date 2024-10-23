@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Byrone.Xenia.Internal;
 using Byrone.Xenia.Utilities;
@@ -7,11 +8,12 @@ using JetBrains.Annotations;
 namespace Byrone.Xenia
 {
 	[PublicAPI]
+	[MustDisposeResource]
 	[StructLayout(LayoutKind.Sequential)]
 #if DEBUG
 	[System.Diagnostics.DebuggerTypeProxy(typeof(Request.DebugView))]
 #endif
-	public readonly ref struct Request
+	public readonly ref struct Request : System.IDisposable
 	{
 		public readonly System.ReadOnlySpan<byte> Method;
 
@@ -39,6 +41,10 @@ namespace Byrone.Xenia
 
 			this.headerData = headers;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose() =>
+			this.headerData.Dispose();
 
 #if DEBUG
 		[StructLayout(LayoutKind.Sequential)]

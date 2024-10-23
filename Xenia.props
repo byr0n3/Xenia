@@ -8,7 +8,7 @@
 		<Features>strict</Features>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<AnalysisLevel>latest</AnalysisLevel>
-		<NoWarn>$(NoWarn);MA0016</NoWarn>
+		<NoWarn>$(NoWarn);MA0016;MA0048</NoWarn>
 		<DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
 		<EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
 		<EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>

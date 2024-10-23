@@ -25,27 +25,6 @@ namespace Byrone.Xenia.Internal
 		public readonly SplitEnumerator GetEnumerator() =>
 			this;
 
-		public int Count()
-		{
-			var current = this.span;
-
-			var count = 0;
-
-			while (this.MoveNext())
-			{
-				if (this.Current.IsEmpty)
-				{
-					break;
-				}
-
-				count++;
-			}
-
-			this.span = current;
-
-			return count;
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public System.ReadOnlySpan<byte> MoveNextAndGet()
 		{
@@ -73,6 +52,73 @@ namespace Byrone.Xenia.Internal
 			{
 				this.Current = this.span.SliceUnsafe(0, index);
 				this.span = this.span.SliceUnsafe(index + 1);
+			}
+
+			return true;
+		}
+	}
+
+	/// <summary>
+	/// Enumerates over <see cref="span"/> and returns every part between <see cref="separator"/>.
+	/// </summary>
+	[StructLayout(LayoutKind.Sequential)]
+	internal ref struct SpanSplitEnumerator
+	{
+		private System.ReadOnlySpan<byte> span;
+		private readonly System.ReadOnlySpan<byte> separator;
+
+		public System.ReadOnlySpan<byte> Current { get; private set; }
+
+		public SpanSplitEnumerator(System.ReadOnlySpan<byte> span, System.ReadOnlySpan<byte> separator)
+		{
+			this.span = span;
+			this.separator = separator;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly SpanSplitEnumerator GetEnumerator() =>
+			this;
+
+		public int Count()
+		{
+			var current = this.span;
+
+			var count = 0;
+
+			while (this.MoveNext())
+			{
+				if (this.Current.IsEmpty)
+				{
+					break;
+				}
+
+				count++;
+			}
+
+			this.span = current;
+
+			return count;
+		}
+
+		public bool MoveNext()
+		{
+			if (this.span.IsEmpty)
+			{
+				return false;
+			}
+
+			var index = System.MemoryExtensions.IndexOf(this.span, this.separator);
+
+			// No more separators in the span, this is the last part
+			if (index == -1)
+			{
+				this.Current = this.span;
+				this.span = default;
+			}
+			else
+			{
+				this.Current = this.span.SliceUnsafe(0, index);
+				this.span = this.span.SliceUnsafe(index + this.separator.Length);
 			}
 
 			return true;
