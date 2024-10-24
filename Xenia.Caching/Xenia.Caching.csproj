@@ -3,8 +3,12 @@
 	<Import Project="../Xenia.props"/>
 
 	<PropertyGroup>
-		<AssemblyName>Byrone.Xenia.Razor</AssemblyName>
+		<AssemblyName>Byrone.Xenia.Caching</AssemblyName>
 		<RootNamespace>Byrone.Xenia</RootNamespace>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Xenia\Xenia.csproj"/>
+	</ItemGroup>
 
 </Project>

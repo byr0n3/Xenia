@@ -11,10 +11,6 @@ namespace Byrone.Xenia.Utilities
 	[PublicAPI]
 	public readonly ref struct RouteCollection
 	{
-		private const byte delimiter = (byte)'/';
-		private const byte parameterStart = (byte)'{';
-		private const byte parameterEnd = (byte)'}';
-
 		private readonly System.ReadOnlySpan<Unmanaged> routes;
 
 		/// <summary>
@@ -33,6 +29,14 @@ namespace Byrone.Xenia.Utilities
 		/// <returns><see langword="true"/> when a matching pattern has been found, <see langword="false"/> otherwise.</returns>
 		public bool TryFind(scoped System.ReadOnlySpan<byte> path, out System.ReadOnlySpan<byte> result)
 		{
+			// If the path contains a query string, trim this off as it'll prevent matching routes.
+			var queryIdx = System.MemoryExtensions.IndexOf(path, Characters.QueryParametersDelimiter);
+
+			if (queryIdx != -1)
+			{
+				path = path.Slice(0, queryIdx);
+			}
+
 			// @todo Faster way than looping?
 			foreach (var pattern in this.routes)
 			{
@@ -50,8 +54,8 @@ namespace Byrone.Xenia.Utilities
 		// Checks if the pattern and path have the same amount of parts (delimiter count) and check if each part is equal/a route parameter.
 		private static bool Matches(scoped System.ReadOnlySpan<byte> pattern, scoped System.ReadOnlySpan<byte> path)
 		{
-			var patternDelimiterCount = RouteCollection.DelimiterCount(pattern);
-			var pathDelimiterCount = RouteCollection.DelimiterCount(path);
+			var patternDelimiterCount = RouteCollection.PathDelimiterCount(pattern);
+			var pathDelimiterCount = RouteCollection.PathDelimiterCount(path);
 
 			if (patternDelimiterCount != pathDelimiterCount)
 			{
@@ -62,8 +66,8 @@ namespace Byrone.Xenia.Utilities
 			RouteCollection.Trim(ref pattern);
 			RouteCollection.Trim(ref path);
 
-			var patternEnumerator = new SplitEnumerator(pattern, RouteCollection.delimiter);
-			var pathEnumerator = new SplitEnumerator(path, RouteCollection.delimiter);
+			var patternEnumerator = new SplitEnumerator(pattern, Characters.PathDelimiter);
+			var pathEnumerator = new SplitEnumerator(path, Characters.PathDelimiter);
 
 			for (var i = 0; i < patternDelimiterCount; i++)
 			{
@@ -84,7 +88,7 @@ namespace Byrone.Xenia.Utilities
 		{
 			// Current part is a route parameter
 			if (!pattern.IsEmpty &&
-				(pattern[0] == RouteCollection.parameterStart) && (pattern[^1] == RouteCollection.parameterEnd))
+				(pattern[0] == Characters.RouteParameterStart) && (pattern[^1] == Characters.RouteParameterEnd))
 			{
 				// @todo Test parameter value validity?
 				return true;
@@ -96,15 +100,15 @@ namespace Byrone.Xenia.Utilities
 		// Trim leading slashes
 		private static void Trim(scoped ref System.ReadOnlySpan<byte> value)
 		{
-			if (value[0] == RouteCollection.delimiter)
+			if (value[0] == Characters.PathDelimiter)
 			{
 				value = value.SliceUnsafe(1);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int DelimiterCount(scoped System.ReadOnlySpan<byte> value) =>
-			System.MemoryExtensions.Count(value, RouteCollection.delimiter);
+		private static int PathDelimiterCount(scoped System.ReadOnlySpan<byte> value) =>
+			System.MemoryExtensions.Count(value, Characters.PathDelimiter);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool Equals(scoped System.ReadOnlySpan<byte> a, scoped System.ReadOnlySpan<byte> b) =>

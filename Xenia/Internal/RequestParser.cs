@@ -22,7 +22,7 @@ namespace Byrone.Xenia.Internal
 			var enumerator = new SpanSplitEnumerator(data, "\r\n"u8);
 			enumerator.MoveNext();
 
-			var httpEnumerator = new SplitEnumerator(enumerator.Current, (byte)' ');
+			var httpEnumerator = new SplitEnumerator(enumerator.Current, Characters.Space);
 			var method = httpEnumerator.MoveNextAndGet();
 			var path = httpEnumerator.MoveNextAndGet();
 			var httpVersion = httpEnumerator.MoveNextAndGet();
@@ -42,7 +42,7 @@ namespace Byrone.Xenia.Internal
 
 			foreach (var header in enumerator)
 			{
-				var separator = System.MemoryExtensions.IndexOf(header, (byte)':');
+				var separator = System.MemoryExtensions.IndexOf(header, Characters.SemiColon);
 
 				if (separator == -1)
 				{
@@ -53,7 +53,7 @@ namespace Byrone.Xenia.Internal
 				var key = header.Slice(0, separator);
 				var value = header.Slice(separator + 1);
 
-				if (value[0] == (byte)' ')
+				if (value[0] == Characters.Space)
 				{
 					value = value.Slice(1);
 				}

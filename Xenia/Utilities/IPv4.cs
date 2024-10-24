@@ -149,7 +149,7 @@ namespace Byrone.Xenia.Utilities
 			System.Span<byte> temp = stackalloc byte[bytes];
 			var written = 0;
 
-			foreach (var part in new SplitEnumerator(span, (byte)'.'))
+			foreach (var part in new SplitEnumerator(span, Characters.Dot))
 			{
 				if (!Utf8Parser.TryParse(part, out byte @byte, out _))
 				{
@@ -175,7 +175,7 @@ namespace Byrone.Xenia.Utilities
 			System.Span<byte> temp = stackalloc byte[bytes];
 			var written = 0;
 
-			foreach (var part in new SplitEnumerator(span, (byte)'.'))
+			foreach (var part in new SplitEnumerator(span, Characters.Dot))
 			{
 				var parsed = Utf8Parser.TryParse(part, out byte @byte, out var __);
 

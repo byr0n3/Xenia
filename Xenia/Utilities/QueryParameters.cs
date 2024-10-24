@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Byrone.Xenia.Internal;
 using Byrone.Xenia.Internal.Extensions;
 using JetBrains.Annotations;
 
@@ -13,8 +14,6 @@ namespace Byrone.Xenia.Utilities
 	[PublicAPI]
 	public readonly ref struct QueryParameters
 	{
-		private const byte queryDelimiter = (byte)'?';
-
 		private readonly System.ReadOnlySpan<byte> query;
 
 		/// <summary>
@@ -25,7 +24,7 @@ namespace Byrone.Xenia.Utilities
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public QueryParameters(System.ReadOnlySpan<byte> query)
 		{
-			Debug.Assert(query[0] == QueryParameters.queryDelimiter);
+			Debug.Assert(query[0] == Characters.QueryParametersDelimiter);
 
 			this.query = query;
 		}
@@ -96,8 +95,6 @@ namespace Byrone.Xenia.Utilities
 
 		private System.ReadOnlySpan<byte> Find(scoped System.ReadOnlySpan<byte> key)
 		{
-			const byte delimiter = (byte)'=';
-
 			if (this.query.IsEmpty)
 			{
 				return default;
@@ -106,14 +103,14 @@ namespace Byrone.Xenia.Utilities
 			var offset = key.Length;
 			var idx = System.MemoryExtensions.IndexOf(this.query, key);
 
-			if ((idx == -1) || (this.query[idx + offset] != delimiter))
+			if ((idx == -1) || (this.query[idx + offset] != Characters.QueryParametersAssignDelimiter))
 			{
 				return default;
 			}
 
 			var slice = this.query.SliceUnsafe(idx + offset + 1);
 
-			var end = System.MemoryExtensions.IndexOf(slice, (byte)'&');
+			var end = System.MemoryExtensions.IndexOf(slice, Characters.QueryParametersJoinDelimiter);
 
 			return end == -1 ? slice : slice.SliceUnsafe(0, end);
 		}
@@ -128,7 +125,7 @@ namespace Byrone.Xenia.Utilities
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static QueryParameters FromUrl(System.ReadOnlySpan<byte> pattern)
 		{
-			var idx = System.MemoryExtensions.IndexOf(pattern, QueryParameters.queryDelimiter);
+			var idx = System.MemoryExtensions.IndexOf(pattern, Characters.QueryParametersDelimiter);
 
 			return idx == -1 ? default : new QueryParameters(pattern.SliceUnsafe(idx));
 		}

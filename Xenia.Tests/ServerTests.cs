@@ -64,7 +64,7 @@ namespace Byrone.Xenia.Tests
 
 		private readonly struct GetResponse : IResponse
 		{
-			public void Send(Socket client)
+			public void Send(Socket client, in Request _)
 			{
 				var response = """
 							   HTTP/1.1 200 OK
@@ -91,7 +91,7 @@ namespace Byrone.Xenia.Tests
 				Debug.Assert(copied);
 			}
 
-			public void Send(Socket client)
+			public void Send(Socket client, in Request _)
 			{
 				var response = """
 							   HTTP/1.1 200 OK

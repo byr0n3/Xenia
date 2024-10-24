@@ -4,7 +4,7 @@ namespace Byrone.Xenia.Example
 {
 	internal readonly struct Response : IResponse
 	{
-		public void Send(Socket client)
+		public void Send(Socket client, in Request _)
 		{
 			var response = """
 						   HTTP/1.1 200 OK

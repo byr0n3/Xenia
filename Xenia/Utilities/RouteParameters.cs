@@ -16,10 +16,6 @@ namespace Byrone.Xenia.Utilities
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly ref struct RouteParameters
 	{
-		private const byte delimiter = (byte)'/';
-		private const byte parameterStart = (byte)'{';
-		private const byte parameterEnd = (byte)'}';
-
 		private readonly System.ReadOnlySpan<byte> pattern;
 		private readonly System.ReadOnlySpan<byte> path;
 
@@ -62,7 +58,7 @@ namespace Byrone.Xenia.Utilities
 				return false;
 			}
 
-			var enumerator = new SplitEnumerator(this.path, RouteParameters.delimiter);
+			var enumerator = new SplitEnumerator(this.path, Characters.PathDelimiter);
 
 			// Keep moving the enumerator until we've arrived at the found slash index
 			for (var i = 0; i <= slash; i++)
@@ -121,19 +117,19 @@ namespace Byrone.Xenia.Utilities
 			var slice = pattern.SliceUnsafe(0, idx + search.Length);
 
 			// Count the amount of slashes (the delimiter). Now we have the index of the enumerated value that we need to return
-			return System.MemoryExtensions.Count(slice, RouteParameters.delimiter);
+			return System.MemoryExtensions.Count(slice, Characters.PathDelimiter);
 		}
 
 		// Formats the given key to follow the following format: /{[KEY]}
 		private static void FormatSearch(scoped System.Span<byte> search, scoped System.ReadOnlySpan<byte> key)
 		{
-			search[0] = RouteParameters.delimiter;
-			search[1] = RouteParameters.parameterStart;
+			search[0] = Characters.PathDelimiter;
+			search[1] = Characters.RouteParameterStart;
 
 			var copied = key.TryCopyTo(search.Slice(2));
 			Debug.Assert(copied);
 
-			search[^1] = RouteParameters.parameterEnd;
+			search[^1] = Characters.RouteParameterEnd;
 		}
 	}
 }

@@ -118,7 +118,8 @@ namespace Byrone.Xenia
 			{
 				var response = this.requestHandler(in request);
 
-				response.Send(client);
+				// Give the `Send` function the request as well, as it's a `ref-struct` that likely can't be stored in the model implementing `IResponse`
+				response.Send(client, in request);
 
 				// ReSharper disable once SuspiciousTypeConversion.Global
 				if (response is System.IDisposable disposable)

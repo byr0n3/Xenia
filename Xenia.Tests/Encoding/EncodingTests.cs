@@ -1,4 +1,3 @@
-using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
@@ -107,40 +106,29 @@ namespace Byrone.Xenia.Tests.Encoding
 			}
 		}
 
-		protected override IResponse RequestHandler(in Request request)
-		{
-			var stream = new MemoryStream(64);
-
-			var found = request.TryGetEncoding(out var encoding);
-
-			Assert.True(found);
-			Assert.False(encoding.IsEmpty);
-
-			var compressed = BodyEncoding.TryEncode(stream, encoding, EncodingTests.Body);
-
-			Assert.True(compressed);
-
-			return new Response(stream, encoding);
-		}
+		protected override IResponse RequestHandler(in Request request) =>
+			new Response();
 
 		private readonly struct Response : IResponse
 		{
-			private readonly MemoryStream stream;
-			private readonly Unmanaged encoding;
-
-			public Response(MemoryStream stream, System.ReadOnlySpan<byte> encoding)
+			public void Send(Socket client, in Request request)
 			{
-				this.stream = stream;
-				this.encoding = encoding;
-			}
+				var found = request.TryGetEncoding(out var encoding);
 
-			public void Send(Socket client)
-			{
+				Assert.True(found);
+				Assert.False(encoding.IsEmpty);
+
+				var stream = new RentedMemoryStream(64);
+
+				var compressed = BodyEncoding.TryEncode(stream, encoding, EncodingTests.Body);
+
+				Assert.True(compressed);
+
 				var response = StringBuilder.Format(
 					stackalloc byte[128],
 					$"""
 					 HTTP/1.1 200 OK
-					 Content-Encoding: {this.encoding}
+					 Content-Encoding: {encoding}
 					 Content-Type: text/html
 					 Server: xenia-test-server
 
@@ -149,7 +137,9 @@ namespace Byrone.Xenia.Tests.Encoding
 				);
 
 				client.Send(response);
-				client.Send(System.MemoryExtensions.AsSpan(this.stream.GetBuffer(), 0, (int)this.stream.Position));
+				client.Send(System.MemoryExtensions.AsSpan(stream.GetBuffer(), 0, (int)stream.Position));
+
+				stream.Dispose();
 			}
 		}
 	}

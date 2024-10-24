@@ -43,7 +43,7 @@ namespace Byrone.Xenia
 			}
 
 			stream.Write(data);
-			stream.Close();
+			stream.Dispose();
 
 			return true;
 

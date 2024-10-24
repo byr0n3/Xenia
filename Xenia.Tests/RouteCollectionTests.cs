@@ -44,6 +44,16 @@ namespace Byrone.Xenia.Tests
 			Assert.False(routes.TryFind("/blog/my-first-post/delete"u8, out _));
 		}
 
+		[Fact]
+		public void CanMatchRouteWithQueryParameters()
+		{
+			var routes = new RouteCollection([
+				"/search"u8,
+			]);
+
+			RouteCollectionTests.AssertMatch(routes, "/search?page=1&per_page=10"u8, "/search"u8);
+		}
+
 		private static void AssertMatch(RouteCollection routes, scoped System.ReadOnlySpan<byte> path) =>
 			RouteCollectionTests.AssertMatch(routes, path, path);
 

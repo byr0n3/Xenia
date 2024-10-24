@@ -1,5 +1,7 @@
 # Xenia
 
+<img src="../assets/logo.png" alt="Xenia Logo">
+
 A simple, minimalistic HTTP/1.1 server written in C#.
 
 ## Quickstart
@@ -43,6 +45,8 @@ thread.Join();
 
 return;
 
+// This callback gets called everytime a new request has been received and parsed.
+// It requires you to return a model that implements `IResponse`, that will write a response to the connected client's stream.
 static IResponse RequestHandler(in Request request)
 {
 	return new Response();
@@ -52,7 +56,7 @@ static IResponse RequestHandler(in Request request)
 // if you implement the `System.IDisposable` interface.
 internal readonly struct Response : IResponse
 {
-	public void Send(Socket client)
+	public void Send(Socket client, in Request request)
 	{ 
 		// Send a basic HTTP and HTML response
 		var response = """ 
@@ -71,16 +75,23 @@ internal readonly struct Response : IResponse
 
 Xenia only handles accepting clients and receiving + parsing the HTTP request the accepted client sends. You as the
 developer are in control over how you handle responding to the client. You do this by implementing the `IResponse`
-interface. This interface requires you to implement a `public void Send(Socket client)` function. Here you can send a
-HTTP response in whichever way you like.
+interface. This interface requires you to implement a `public void Send(Socket client, in Request request)` function.
+Here you can send an HTTP response in whichever way you like.
 
 Only have a few routes that you want to handle? A simple `if-statement` would probably be enough, no need to implement
 some specific and overcomplicated routing solution. Have a lot of (dynamic) routes? Using the `RouteCollection` and
 `RouteParameters` structs you can easily implement your own advanced routing system.
 
-## Running the server
+### What about `async`?
 
-Xenia attempts to use as little `async/await` as possible, as C#'s async system has quite some overhead. The only time `async/await` is used, is the `Server.RunAsync` function.
+Xenia attempts to use as little `async/await` as possible, as C#'s async system has quite some overhead. This also
+forces you to use this pattern, even if you don't want to. This is why (currently) Xenia is completely synchronous. It
+is up to you to decide how you'd like to handle things like threading and parallelism.
+
+Another downside of the `async/await` system is the lack of proper `System.Span<T>` and `System.ReadOnlySpan<T>`
+support. While this is definitely getting better since .NET 9, we're still not quite there yet, and possibly won't be,
+as Spans can be (and most of the time are) allocated on the HEAP, and since `async` methods are ran on a different
+thread, possibly at a different time, there's a good chance this data is already gone.
 
 ## Utilities
 
@@ -90,6 +101,7 @@ The `RouteCollection` struct contains a list of predefined routes that you'll wa
 function to see if a requested path matches a predefined route.
 
 ```csharp
+using Byrone.Xenia;
 using Byrone.Xenia.Utilities;
 
 static IResponse RequestHandler(in Request request)
@@ -115,6 +127,7 @@ static IResponse RequestHandler(in Request request)
 By giving this struct a `pattern` and `path`, you can retrieve dynamic variables based on the requested path.
 
 ```csharp
+using Byrone.Xenia;
 using Byrone.Xenia.Utilities;
 
 static IResponse RequestHandler(in Request request)
@@ -142,6 +155,7 @@ static IResponse RequestHandler(in Request request)
 Sometimes, you'd like to use parameters using a query string. Xenia also has a helper struct for this.
 
 ```csharp
+using Byrone.Xenia;
 using Byrone.Xenia.Utilities;
 
 static IResponse RequestHandler(in Request request)

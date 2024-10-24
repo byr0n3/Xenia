@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Byrone.Xenia.Internal;
 using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Utilities
@@ -104,7 +105,7 @@ namespace Byrone.Xenia.Utilities
 			}
 
 			written = ipWritten;
-			destination[written++] = (byte)':';
+			destination[written++] = Characters.SemiColon;
 
 			if (!this.Port.TryFormat(destination.Slice(written),
 									 out var portWritten,

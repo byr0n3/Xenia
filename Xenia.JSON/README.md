@@ -62,6 +62,8 @@ validate if the request contains valid JSON data, you should do this yourself by
 the request.
 
 ```csharp
+using Byrone.Xenia;
+
 static IResponse RequestHandler(in Request request)
 {
     var person = request.GetBodyAsJson<Person>();
