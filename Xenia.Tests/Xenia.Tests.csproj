@@ -20,6 +20,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Xenia\Xenia.csproj"/>
 		<ProjectReference Include="..\Xenia.Caching\Xenia.Caching.csproj"/>
+		<ProjectReference Include="..\Xenia.Data\Xenia.Data.csproj"/>
 		<ProjectReference Include="..\Xenia.Encoding\Xenia.Encoding.csproj"/>
 		<ProjectReference Include="..\Xenia.JSON\Xenia.JSON.csproj"/>
 	</ItemGroup>

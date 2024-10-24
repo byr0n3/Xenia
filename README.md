@@ -37,3 +37,12 @@ Unit tests for different functionalities.
 ### Xenia.Example
 
 Example usages for reading requests and returning responses.
+
+## Examples
+
+For examples on how to use Xenia, you should check the following resources:
+
+- [Xenia Quickstart guide](Xenia/README.md#quickstart) – Fastest way to start using Xenia
+- [Xenia.Example project](Xenia.Example) – More concrete and functional example server
+- [Xenia.Tests unit tests](Xenia.Tests) – The best way to see how different parts of Xenia work and what the expected
+  results are.

@@ -35,7 +35,7 @@ namespace Byrone.Xenia
 		/// </summary>
 		/// <remarks>
 		/// <para>If the <c>Vary</c> header is set to <c>Accept-Language</c>, the browser will check if the request's <c>Accept-Language</c> is the same as the cached one.</para>
-		/// <para>If it isn't, it will execute the request and store the response alongside the cached response (which has a different header).</para>
+		/// <para>If it is, it will use the cached response (assuming it's not stale). Otherwise, it will execute the request and store the response alongside the cached response (which has a different header).</para>
 		/// </remarks>
 		/// <example><c>"Accept-Language"u8</c>, <c>"Accept-Language, Accept"u8</c></example>
 		public readonly System.ReadOnlySpan<byte> Vary;

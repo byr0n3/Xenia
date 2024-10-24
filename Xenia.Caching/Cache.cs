@@ -1,5 +1,6 @@
 using System.Buffers.Text;
 using System.Runtime.CompilerServices;
+using Byrone.Xenia.Internal;
 using Byrone.Xenia.Utilities;
 
 namespace Byrone.Xenia
@@ -35,12 +36,14 @@ namespace Byrone.Xenia
 			builder.AppendFormatted(type);
 			builder.AppendFormatted(", must-revalidate, max-age="u8);
 			builder.AppendFormatted(cacheable.Age);
-			builder.AppendFormatted("\nETag: "u8);
+			builder.AppendFormatted(Characters.HttpSeparator);
+			builder.AppendFormatted("ETag: "u8);
 			builder.AppendFormatted(cacheable.ETag);
 
 			if (!cacheable.Vary.IsEmpty)
 			{
-				builder.AppendFormatted("\nVary: "u8);
+				builder.AppendFormatted(Characters.HttpSeparator);
+				builder.AppendFormatted("Vary: "u8);
 				builder.AppendFormatted(cacheable.Vary);
 			}
 
@@ -50,9 +53,12 @@ namespace Byrone.Xenia
 			{
 				var now = System.DateTime.UtcNow;
 
-				builder.AppendFormatted("\nDate: "u8);
+				builder.AppendFormatted(Characters.HttpSeparator);
+				builder.AppendFormatted("Date: "u8);
 				builder.AppendFormatted(now, dateTimeFormat);
-				builder.AppendFormatted("\nLast-Modified: "u8);
+
+				builder.AppendFormatted(Characters.HttpSeparator);
+				builder.AppendFormatted("Last-Modified: "u8);
 				builder.AppendFormatted(cacheable.LastModified, dateTimeFormat);
 			}
 

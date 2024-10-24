@@ -6,20 +6,17 @@ namespace Byrone.Xenia.Internal
 {
 	internal static class RequestParser
 	{
-		private static System.ReadOnlySpan<byte> BodySeparator =>
-			"\r\n\r\n"u8;
-
 		public static bool TryParse(System.ReadOnlySpan<byte> data, [MustDisposeResource] out Request request)
 		{
-			var bodyIdx = System.MemoryExtensions.IndexOf(data, RequestParser.BodySeparator);
-			var body = bodyIdx == -1 ? default : data.Slice(bodyIdx + RequestParser.BodySeparator.Length);
+			var bodyIdx = System.MemoryExtensions.IndexOf(data, Characters.RequestBodySeparator);
+			var body = bodyIdx == -1 ? default : data.Slice(bodyIdx + Characters.RequestBodySeparator.Length);
 
 			if (bodyIdx != -1)
 			{
 				data = data.Slice(0, bodyIdx);
 			}
 
-			var enumerator = new SpanSplitEnumerator(data, "\r\n"u8);
+			var enumerator = new SpanSplitEnumerator(data, Characters.HttpSeparator);
 			enumerator.MoveNext();
 
 			var httpEnumerator = new SplitEnumerator(enumerator.Current, Characters.Space);
