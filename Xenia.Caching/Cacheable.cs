@@ -3,6 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace Byrone.Xenia
 {
+	/// <summary>
+	/// Entity describing the cache behavior of certain content.
+	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly ref struct Cacheable
 	{
@@ -23,6 +26,8 @@ namespace Byrone.Xenia
 		/// <summary>
 		/// Identifier for a specific version of the resource. This could be a (file)version, but also a hash of the response body.
 		/// </summary>
+		/// <remarks>The HTTP specification expects this value to be quoted using the '"' character. This is <b>NOT</b> done automatically.</remarks>
+		/// <example><c>"tag-here"</c>, <c>"v0.1.0"</c></example>
 		public readonly System.ReadOnlySpan<byte> ETag;
 
 		/// <summary>

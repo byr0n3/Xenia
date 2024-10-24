@@ -18,19 +18,38 @@ private readonly struct Response : IResponse
 
 		var cacheHeaders = Cache.GetCacheHeaders(buffer, cacheable);
 
-		var response = StringBuilder.Format(
-			stackalloc byte[256],
-			$"""
-			HTTP/1.1 200 OK
-			{cacheHeaders}
-			Content-Type: text/html
-			Server: xenia-server
+		if (Cache.IsStale(in request, cacheable)) 
+		{
+			var response = StringBuilder.Format(
+				stackalloc byte[256],
+				$"""
+				HTTP/1.1 200 OK
+				{cacheHeaders}
+				Content-Type: text/html
+				Server: xenia-server
 
-			<html><body><h1>This response should be cached by the browser.</h1></body></html>
-			"""
-		);
+				<html><body><h1>This response should be cached by the browser.</h1></body></html>
+				"""
+			);
 
-		client.Send(response); 
+			client.Send(response);
+		}
+		else
+		{
+			var response = StringBuilder.Format(
+				stackalloc byte[256],
+				$"""
+				HTTP/1.1 304 Not Modified
+				{cacheHeaders}
+				Content-Type: text/html
+				Server: xenia-server
+
+
+				"""
+			);
+
+			client.Send(response);
+		}
 	}
 }
 ```
