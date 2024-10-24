@@ -30,13 +30,25 @@ Provides utilities for encoding HTTP responses based on the request's preferred 
 
 Utilities for dealing with caching content.
 
+[Read more](Xenia.Caching/README.md)
+
+### Xenia.Data
+
+Collection of helpers/utilities for working with different kinds of data.
+
+[Read more](Xenia.Data/README.md)
+
 ### Xenia.Tests
 
 Unit tests for different functionalities.
 
+[Explore](Xenia.Tests)
+
 ### Xenia.Example
 
-Example usages for reading requests and returning responses.
+Simple example of how to use Xenia to handle requests and return HTTP responses.
+
+[Explore](Xenia.Example)
 
 ## Examples
 
