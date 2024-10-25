@@ -39,6 +39,19 @@ return;
 
 static IResponse RequestHandler(in Request request)
 {
+	var multipart = Multipart.FromRequest(in request);
+
+	if (multipart.IsValid)
+	{
+		var a = multipart.TryGet("username"u8, out var username);
+		var b = multipart.TryGet("password"u8, out var password);
+		var c = multipart.TryGet("file"u8, out var file);
+
+		username.Dispose();
+		password.Dispose();
+		file.Dispose();
+	}
+
 	var routes = new RouteCollection([
 		"/"u8,
 		"/blog"u8,

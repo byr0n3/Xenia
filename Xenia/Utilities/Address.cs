@@ -105,7 +105,7 @@ namespace Byrone.Xenia.Utilities
 			}
 
 			written = ipWritten;
-			destination[written++] = Characters.SemiColon;
+			destination[written++] = Characters.Colon;
 
 			if (!this.Port.TryFormat(destination.Slice(written),
 									 out var portWritten,

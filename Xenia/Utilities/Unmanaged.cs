@@ -5,7 +5,7 @@ using Byrone.Xenia.Internal.Extensions;
 namespace Byrone.Xenia.Utilities
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly unsafe struct Unmanaged
+	public readonly unsafe struct Unmanaged : System.IEquatable<Unmanaged>
 	{
 		private readonly byte* ptr;
 		private readonly int length;
@@ -15,6 +15,10 @@ namespace Byrone.Xenia.Utilities
 		/// </summary>
 		public System.ReadOnlySpan<byte> Managed =>
 			new(this.ptr, this.length);
+
+		/// <inheritdoc cref="System.ReadOnlySpan{T}.IsEmpty"/>
+		public bool IsEmpty =>
+			this.Managed.IsEmpty;
 
 		public Unmanaged(byte* ptr, int length)
 		{
@@ -35,5 +39,26 @@ namespace Byrone.Xenia.Utilities
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator System.ReadOnlySpan<byte>(Unmanaged value) =>
 			value.Managed;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Equals(Unmanaged other) =>
+			System.MemoryExtensions.SequenceEqual(this.Managed, other.Managed);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override bool Equals(object? @object) =>
+			(@object is Unmanaged other) && this.Equals(other);
+
+		[System.Obsolete("Unimplemented", true)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode() =>
+			default;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator ==(Unmanaged left, Unmanaged right) =>
+			left.Equals(right);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator !=(Unmanaged left, Unmanaged right) =>
+			!left.Equals(right);
 	}
 }

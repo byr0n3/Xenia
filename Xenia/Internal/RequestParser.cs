@@ -39,7 +39,7 @@ namespace Byrone.Xenia.Internal
 
 			foreach (var header in enumerator)
 			{
-				var separator = System.MemoryExtensions.IndexOf(header, Characters.SemiColon);
+				var separator = System.MemoryExtensions.IndexOf(header, Characters.Colon);
 
 				if (separator == -1)
 				{

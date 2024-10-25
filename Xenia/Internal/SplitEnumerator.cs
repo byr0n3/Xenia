@@ -89,7 +89,7 @@ namespace Byrone.Xenia.Internal
 			{
 				if (this.Current.IsEmpty)
 				{
-					break;
+					continue;
 				}
 
 				count++;

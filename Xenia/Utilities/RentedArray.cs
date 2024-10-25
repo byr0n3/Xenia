@@ -5,10 +5,11 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
-namespace Byrone.Xenia.Internal
+namespace Byrone.Xenia.Utilities
 {
+	[PublicAPI]
 	[MustDisposeResource]
-	internal readonly struct RentedArray<T> : System.IDisposable
+	public readonly struct RentedArray<T> : System.IDisposable
 	{
 		private readonly T[]? array;
 		private readonly ArrayPool<T>? pool;

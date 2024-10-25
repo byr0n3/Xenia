@@ -11,8 +11,10 @@ namespace Byrone.Xenia.Internal
 		public const byte RouteParameterEnd = (byte)'}';
 
 		public const byte Space = (byte)' ';
-		public const byte SemiColon = (byte)':';
+		public const byte Colon = (byte)':';
+		public const byte SemiColon = (byte)';';
 		public const byte Dot = (byte)'.';
+		public const byte DoubleQuote = (byte)'"';
 
 		public static System.ReadOnlySpan<byte> HttpSeparator =>
 			"\r\n"u8;

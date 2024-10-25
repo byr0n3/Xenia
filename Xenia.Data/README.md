@@ -63,4 +63,54 @@ Debug.Assert(decoded);
 var body = dst.SliceUnsafe(0, written);
 ```
 
-When decoding encoded content, keep in mind that the decoded output can have a bigger size/length than the encoded input.
+When decoding encoded content, keep in mind that the decoded output can have a bigger size/length than the encoded
+input.
+
+## `multipart/form-data`
+
+`multipart/form-data` is one of the different ways that's used to format a request's body, for example when you send a
+POST form.
+
+When a request with this data type is sent, the `Content-Type` header will look something like this:
+
+```
+multipart/form-data; boundary=--BROWSER-GENERATED-NAME
+```
+
+The `boundary` here declares which parts/chunks of the request body belong to the form data. The request body contains
+different chunks, following this format:
+
+[//]: # (I know this isn't an .env file format, but it provides some syntax highlighting which makes this easier to read)
+
+```dotenv
+--BROWSER-GENERATED-NAME
+content-disposition: form-data; name="example-data"
+content-type: text/plain; # This header is optional. The spec defines that if this header is missing, the Content-Type will be: text/plain
+
+Hello world! This data has been sent using the 'multipart/form-data' format.
+--BROWSER-GENERATED-NAME
+```
+
+You can handle this data easily in your request handler like this:
+
+```csharp
+static IResponse RequestHandler(in Request request) 
+{
+	// Validates and parses the `Content-Type` header, so you can easily access the sent multipart data. 
+	var multipart = Multipart.FromRequest(in request);
+
+	// Make sure to check the `IsValid` boolean before trying to access the multipart data,
+	// as the request may not be valid multipart data.
+	if (multipart.IsValid)
+	{
+		var found = multipart.TryGet("username"u8, out var username);
+		found = multipart.TryGet("password"u8, out var password);
+		found = multipart.TryGet("file"u8, out var file);
+
+		// Make sure to cleanup the allocated resources! 
+		username.Dispose();
+		password.Dispose();
+		file.Dispose();
+	}
+}
+```

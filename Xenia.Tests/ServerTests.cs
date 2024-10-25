@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Byrone.Xenia.Internal;
+using Byrone.Xenia.Utilities;
 
 namespace Byrone.Xenia.Tests
 {
