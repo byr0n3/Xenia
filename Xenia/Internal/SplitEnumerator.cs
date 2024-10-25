@@ -15,6 +15,9 @@ namespace Byrone.Xenia.Internal
 
 		public System.ReadOnlySpan<byte> Current { get; private set; }
 
+		public readonly int Count =>
+			this.span.IsEmpty ? default : (System.MemoryExtensions.Count(this.span, this.separator) + 1);
+
 		public SplitEnumerator(System.ReadOnlySpan<byte> span, byte separator)
 		{
 			this.span = span;
@@ -69,6 +72,9 @@ namespace Byrone.Xenia.Internal
 
 		public System.ReadOnlySpan<byte> Current { get; private set; }
 
+		public readonly int Count =>
+			this.span.IsEmpty ? default : (System.MemoryExtensions.Count(this.span, this.separator) + 1);
+
 		public SpanSplitEnumerator(System.ReadOnlySpan<byte> span, System.ReadOnlySpan<byte> separator)
 		{
 			this.span = span;
@@ -78,27 +84,6 @@ namespace Byrone.Xenia.Internal
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly SpanSplitEnumerator GetEnumerator() =>
 			this;
-
-		public int Count()
-		{
-			var current = this.span;
-
-			var count = 0;
-
-			while (this.MoveNext())
-			{
-				if (this.Current.IsEmpty)
-				{
-					continue;
-				}
-
-				count++;
-			}
-
-			this.span = current;
-
-			return count;
-		}
 
 		public bool MoveNext()
 		{

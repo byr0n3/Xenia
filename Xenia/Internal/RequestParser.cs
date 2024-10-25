@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Byrone.Xenia.Internal.Extensions;
 using Byrone.Xenia.Utilities;
 using JetBrains.Annotations;
 
@@ -17,7 +18,12 @@ namespace Byrone.Xenia.Internal
 			}
 
 			var enumerator = new SpanSplitEnumerator(data, Characters.HttpSeparator);
-			enumerator.MoveNext();
+
+			if (!enumerator.MoveNext())
+			{
+				request = default;
+				return false;
+			}
 
 			var httpEnumerator = new SplitEnumerator(enumerator.Current, Characters.Space);
 			var method = httpEnumerator.MoveNextAndGet();
@@ -33,7 +39,7 @@ namespace Byrone.Xenia.Internal
 		[MustDisposeResource]
 		private static RentedArray<KeyValuePair<Unmanaged, Unmanaged>> GetHeaders(SpanSplitEnumerator enumerator)
 		{
-			var headers = new RentedArray<KeyValuePair<Unmanaged, Unmanaged>>(enumerator.Count());
+			var headers = new RentedArray<KeyValuePair<Unmanaged, Unmanaged>>(enumerator.Count);
 
 			var count = 0;
 
@@ -47,12 +53,12 @@ namespace Byrone.Xenia.Internal
 					break;
 				}
 
-				var key = header.Slice(0, separator);
-				var value = header.Slice(separator + 1);
+				var key = header.SliceUnsafe(0, separator);
+				var value = header.SliceUnsafe(separator + 1);
 
 				if (value[0] == Characters.Space)
 				{
-					value = value.Slice(1);
+					value = value.SliceUnsafe(1);
 				}
 
 				headers[count++] = new KeyValuePair<Unmanaged, Unmanaged>(key, value);

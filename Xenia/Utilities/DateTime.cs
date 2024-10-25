@@ -1,7 +1,6 @@
 using System.Buffers.Text;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
 namespace Byrone.Xenia.Utilities
@@ -10,12 +9,11 @@ namespace Byrone.Xenia.Utilities
 	/// Wrapper/replacement for <see cref="System.DateTime"/> as it doesn't implement <see cref="System.IUtf8SpanParsable{T}"/>.
 	/// </summary>
 	[PublicAPI]
-	[StructLayout(LayoutKind.Explicit)]
 	public readonly struct DateTime : System.IEquatable<DateTime>,
 									  System.IComparable<DateTime>,
 									  System.IUtf8SpanParsable<DateTime>
 	{
-		[FieldOffset(0)] public readonly System.DateTime Value;
+		public readonly System.DateTime Value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public DateTime(System.DateTime value) =>
@@ -38,8 +36,8 @@ namespace Byrone.Xenia.Utilities
 			this.Value.Equals(other.Value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(object? obj) =>
-			obj is DateTime other && this.Equals(other);
+		public override bool Equals(object? @object) =>
+			(@object is DateTime other) && this.Equals(other);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode() =>

@@ -1,7 +1,6 @@
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text.Unicode;
 using JetBrains.Annotations;
 
@@ -11,10 +10,9 @@ namespace Byrone.Xenia.Utilities
 	/// Wrapper/replacement for <see cref="System.DateOnly"/> as it doesn't implement <see cref="System.IUtf8SpanParsable{T}"/>.
 	/// </summary>
 	[PublicAPI]
-	[StructLayout(LayoutKind.Explicit)]
 	public readonly struct Date : System.IEquatable<Date>, System.IComparable<Date>, System.IUtf8SpanParsable<Date>
 	{
-		[FieldOffset(0)] public readonly System.DateOnly Value;
+		public readonly System.DateOnly Value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Date(System.DateOnly value) =>
@@ -37,8 +35,8 @@ namespace Byrone.Xenia.Utilities
 			this.Value.Equals(other.Value);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(object? obj) =>
-			obj is Date other && this.Equals(other);
+		public override bool Equals(object? @object) =>
+			(@object is Date other) && this.Equals(other);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode() =>
@@ -74,7 +72,7 @@ namespace Byrone.Xenia.Utilities
 
 		public static Date Parse(System.ReadOnlySpan<byte> utf8Text, System.IFormatProvider? provider)
 		{
-			System.Span<char> temp = stackalloc char[sizeof(char) * utf8Text.Length];
+			System.Span<char> temp = stackalloc char[utf8Text.Length];
 
 			// @todo Remove conversion
 			var status = Utf8.ToUtf16(utf8Text, temp, out _, out var written);
@@ -88,7 +86,7 @@ namespace Byrone.Xenia.Utilities
 									System.IFormatProvider? provider,
 									out Date result)
 		{
-			System.Span<char> temp = stackalloc char[sizeof(char) * utf8Text.Length];
+			System.Span<char> temp = stackalloc char[utf8Text.Length];
 
 			// @todo Remove conversion
 			var status = Utf8.ToUtf16(utf8Text, temp, out _, out var written);

@@ -65,7 +65,7 @@ namespace Byrone.Xenia
 
 			// It's possible that we rent 1/2 too many items, but this shouldn't matter (most of the time)...
 			// ...as the array size gets rounded to a ^2 number anyway.
-			var headers = new RentedArray<KeyValuePair<Unmanaged, Unmanaged>>(enumerator.Count());
+			var headers = new RentedArray<KeyValuePair<Unmanaged, Unmanaged>>(enumerator.Count);
 			var i = 0;
 
 			System.ReadOnlySpan<byte> content = default;
