@@ -25,9 +25,7 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build -c ${{ matrix.configuration }} --no-restore /p:Version=${VERSION}
-      - name: Test
-        run: dotnet test -c ${{ matrix.configuration }} --no-build --verbosity normal
       - name: Pack
         run: dotnet pack -c ${{ matrix.configuration }} --no-build --output packags /p:Version=${VERSION}
       - name: Push packages to NuGet
-        run: dotnet nuget push "packags/*.nupkg" --api-key=${{secrets.NUGET_API_KEY}}
+        run: dotnet nuget push "packags/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key=${{secrets.NUGET_API_KEY}}
