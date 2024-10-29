@@ -6,12 +6,13 @@
 		<AssemblyName>Byrone.Xenia</AssemblyName>
 		<RootNamespace>Byrone.Xenia</RootNamespace>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<PackageDescription>A simple, minimalistic HTTP/1.1 server written in C#.</PackageDescription>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Update="Server.Logging.cs">
-	    <DependentUpon>Server.cs</DependentUpon>
-	  </Compile>
+		<Compile Update="Server.Logging.cs">
+			<DependentUpon>Server.cs</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 </Project>

@@ -1,0 +1,27 @@
+name: Run unit tests
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # .NET configuration types
+        configuration: [ Debug, Release ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build -c ${{ matrix.configuration }} --no-restore
+      - name: Test
+        run: dotnet test -c ${{ matrix.configuration }} --no-build --verbosity normal

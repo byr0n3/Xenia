@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<Company>Byrone</Company>
+		<Authors>Byrone</Authors>
 		<TargetFramework>net9.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<LangVersion>preview</LangVersion>
@@ -14,6 +15,8 @@
 		<EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
 		<IsPublishable>false</IsPublishable>
 		<IsPackable>true</IsPackable>
+
+		<RepositoryUrl>https://github.com/byr0n3/Xenia</RepositoryUrl>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">

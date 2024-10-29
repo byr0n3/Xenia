@@ -50,6 +50,7 @@ namespace Byrone.Xenia.Utilities
 		/// <example><c>var found = routeParams.TryGet("post"u8, out var post);</c></example>
 		public bool TryGet(scoped System.ReadOnlySpan<byte> key, out System.ReadOnlySpan<byte> value)
 		{
+			// @todo Use a lookup table? (store an index per dynamic parameter?)
 			var slash = RouteParameters.FindIndex(this.pattern, key);
 
 			if (slash == -1)

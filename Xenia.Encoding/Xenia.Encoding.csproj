@@ -5,6 +5,7 @@
 	<PropertyGroup>
 		<AssemblyName>Byrone.Xenia.Encoding</AssemblyName>
 		<RootNamespace>Byrone.Xenia</RootNamespace>
+		<PackageDescription>Helpers to find the preferred encoding from the request and encode data.</PackageDescription>
 	</PropertyGroup>
 
 	<ItemGroup>

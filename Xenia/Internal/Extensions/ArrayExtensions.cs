@@ -25,7 +25,10 @@ namespace Byrone.Xenia.Internal.Extensions
 		{
 			Debug.Assert((start + length) <= @this.Length);
 
-			return MemoryMarshal.CreateSpan(ref Unsafe.Add(ref @this[0], start), length);
+			return MemoryMarshal.CreateSpan(
+				ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(@this), start),
+				length
+			);
 		}
 	}
 }
