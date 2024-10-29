@@ -16,6 +16,7 @@
 		<IsPublishable>false</IsPublishable>
 		<IsPackable>true</IsPackable>
 
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/byr0n3/Xenia</RepositoryUrl>
 	</PropertyGroup>
 
@@ -24,6 +25,11 @@
 		<MetadataUpdaterSupport>false</MetadataUpdaterSupport>
 		<DebuggerSupport>false</DebuggerSupport>
 	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+		<None Include="README.md" Pack="true" PackagePath="\"/>
+		<None Include="../LICENSE" Pack="true" PackagePath="\"/>
+	</ItemGroup>
 
 	<ItemGroup Condition=" '$(Configuration)' != 'Release' ">
 		<PackageReference Include="AsyncFixer" Version="1.6.0">
