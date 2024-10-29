@@ -8,10 +8,6 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # .NET configuration types
-        configuration: [ Debug, Release ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,8 +20,8 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build -c ${{ matrix.configuration }} --no-restore /p:Version=${VERSION}
+        run: dotnet build -c Debug --no-restore /p:Version=${VERSION}
       - name: Pack
-        run: dotnet pack -c ${{ matrix.configuration }} --no-build --output packags /p:Version=${VERSION}
+        run: dotnet pack -c Debug --no-build --output packags /p:Version=${VERSION}
       - name: Push packages to NuGet
         run: dotnet nuget push "packags/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key=${{secrets.NUGET_API_KEY}} --skip-duplicate
