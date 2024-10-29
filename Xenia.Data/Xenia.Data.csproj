@@ -3,6 +3,7 @@
 	<Import Project="../Xenia.props"/>
 
 	<PropertyGroup>
+		<PackageId>Byrone.Xenia.Data</PackageId>
 		<AssemblyName>Byrone.Xenia.Data</AssemblyName>
 		<RootNamespace>Byrone.Xenia</RootNamespace>
 		<PackageDescription>Collection of helpers/utilities for working with different kinds of data.</PackageDescription>

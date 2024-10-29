@@ -3,6 +3,7 @@
 	<Import Project="../Xenia.props"/>
 
 	<PropertyGroup>
+		<PackageId>Byrone.Xenia.Caching</PackageId>
 		<AssemblyName>Byrone.Xenia.Caching</AssemblyName>
 		<RootNamespace>Byrone.Xenia</RootNamespace>
 		<PackageDescription>Utilities for working with cached-content and applying caching headers.</PackageDescription>

@@ -3,6 +3,7 @@
 	<Import Project="../Xenia.props"/>
 
 	<PropertyGroup>
+		<PackageId>Byrone.Xenia</PackageId>
 		<AssemblyName>Byrone.Xenia</AssemblyName>
 		<RootNamespace>Byrone.Xenia</RootNamespace>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>

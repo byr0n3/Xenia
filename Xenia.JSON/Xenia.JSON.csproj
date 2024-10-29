@@ -3,6 +3,7 @@
 	<Import Project="../Xenia.props"/>
 
 	<PropertyGroup>
+		<PackageId>Byrone.Xenia.JSON</PackageId>
 		<AssemblyName>Byrone.Xenia.JSON</AssemblyName>
 		<RootNamespace>Byrone.Xenia</RootNamespace>
 		<PackageDescription>Helpers for working with JSON content and (de)serializing JSON using the built-in `System.Text.Json` package.</PackageDescription>

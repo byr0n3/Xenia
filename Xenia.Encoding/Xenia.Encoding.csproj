@@ -3,6 +3,7 @@
 	<Import Project="../Xenia.props"/>
 
 	<PropertyGroup>
+		<PackageId>Byrone.Xenia.Encoding</PackageId>
 		<AssemblyName>Byrone.Xenia.Encoding</AssemblyName>
 		<RootNamespace>Byrone.Xenia</RootNamespace>
 		<PackageDescription>Helpers to find the preferred encoding from the request and encode data.</PackageDescription>

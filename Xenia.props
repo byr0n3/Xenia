@@ -16,7 +16,9 @@
 		<IsPublishable>false</IsPublishable>
 		<IsPackable>true</IsPackable>
 
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIconUrl>https://raw.githubusercontent.com/byr0n3/Xenia/refs/heads/master/assets/logo.png</PackageIconUrl>
 		<RepositoryUrl>https://github.com/byr0n3/Xenia</RepositoryUrl>
 	</PropertyGroup>
 
