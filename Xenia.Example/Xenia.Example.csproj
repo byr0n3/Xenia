@@ -1,36 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="../Xenia.props"/>
 
 	<PropertyGroup>
-		<OutputType>Exe</OutputType>
 		<AssemblyName>Byrone.Xenia.Example</AssemblyName>
 		<RootNamespace>Byrone.Xenia.Example</RootNamespace>
-		<IsPublishable>true</IsPublishable>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)' != 'Debug'">
+		<OutputType>Exe</OutputType>
 		<PublishAot>true</PublishAot>
-		<SelfContained>true</SelfContained>
-
-		<DebugType>none</DebugType>
-		<StripSymbols>true</StripSymbols>
-
-		<UseSystemResourceKeys>true</UseSystemResourceKeys>
-		<OptimizationPreference>Speed</OptimizationPreference>
-		<RootAllApplicationAssemblies>false</RootAllApplicationAssemblies>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<IsPublishable>true</IsPublishable>
+		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Xenia\Xenia.csproj"/>
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Components.Web"/>
-	</ItemGroup>
-
-	<ItemGroup>
-		<Content Include="_static\**">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+		<ProjectReference Include="..\Xenia.Data\Xenia.Data.csproj"/>
+		<ProjectReference Include="..\Xenia.Encoding\Xenia.Encoding.csproj"/>
+		<ProjectReference Include="..\Xenia.JSON\Xenia.JSON.csproj"/>
 	</ItemGroup>
 
 </Project>

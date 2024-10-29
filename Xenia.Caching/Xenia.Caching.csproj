@@ -3,15 +3,12 @@
 	<Import Project="../Xenia.props"/>
 
 	<PropertyGroup>
-		<AssemblyName>Byrone.Xenia</AssemblyName>
+		<AssemblyName>Byrone.Xenia.Caching</AssemblyName>
 		<RootNamespace>Byrone.Xenia</RootNamespace>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Update="Server.Logging.cs">
-	    <DependentUpon>Server.cs</DependentUpon>
-	  </Compile>
+		<ProjectReference Include="..\Xenia\Xenia.csproj"/>
 	</ItemGroup>
 
 </Project>

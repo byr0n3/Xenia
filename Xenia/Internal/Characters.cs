@@ -1,23 +1,25 @@
-﻿namespace Byrone.Xenia.Internal
+namespace Byrone.Xenia.Internal
 {
 	internal static class Characters
 	{
-		public const byte NewLine = (byte)'\n';
+		public const byte PathDelimiter = (byte)'/';
+		public const byte QueryParametersDelimiter = (byte)'?';
+		public const byte QueryParametersAssignDelimiter = (byte)'=';
+		public const byte QueryParametersJoinDelimiter = (byte)'&';
 
-		public const byte Reset = (byte)'\r';
+		public const byte RouteParameterStart = (byte)'{';
+		public const byte RouteParameterEnd = (byte)'}';
 
-		public const byte ForwardSlash = (byte)'/';
-
-		public const byte Comma = (byte)',';
-
+		public const byte Space = (byte)' ';
+		public const byte Colon = (byte)':';
 		public const byte SemiColon = (byte)';';
+		public const byte Dot = (byte)'.';
+		public const byte DoubleQuote = (byte)'"';
 
-		public const byte QuestionMark = (byte)'?';
+		public static System.ReadOnlySpan<byte> HttpSeparator =>
+			"\r\n"u8;
 
-		public const byte Ampersand = (byte)'&';
-
-		public const byte OpenCurlyBracket = (byte)'{';
-
-		public new const byte Equals = (byte)'=';
+		public static System.ReadOnlySpan<byte> RequestBodySeparator =>
+			"\r\n\r\n"u8;
 	}
 }

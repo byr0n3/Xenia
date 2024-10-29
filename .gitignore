@@ -3,7 +3,4 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
-
-# Build testing
-/Xenia.Example/build
-curl-format.txt
+*.DotSettings.user

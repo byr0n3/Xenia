@@ -1,148 +1,112 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Net;
+using System.Diagnostics;
 using System.Net.Http;
-using System.Threading;
+using System.Net.Sockets;
 using System.Threading.Tasks;
-using Byrone.Xenia.Extensions;
-using Byrone.Xenia.Helpers;
+using Byrone.Xenia.Utilities;
 
-namespace Xenia.Tests
+namespace Byrone.Xenia.Tests
 {
-	[TestClass]
-	[SuppressMessage("Usage", "MA0040")]
-	public sealed partial class ServerTests
+	public sealed class ServerTests : BaseServerTests
 	{
-		internal static readonly int Port = System.Random.Shared.Next(100, 10000);
-
-		private static readonly HttpClient httpClient = new()
+		public ServerTests() : base(6000)
 		{
-			BaseAddress = new System.Uri($"http://localhost:{ServerTests.Port}"),
-		};
-
-		private static CancellationTokenSource? tokenSource;
-		private static Server? server;
-
-		[AssemblyInitialize]
-		public static void Setup(TestContext _)
-		{
-			ServerTests.tokenSource = new CancellationTokenSource();
-
-			ServerTests.server = TestHelpers.CreateServer(ServerTests.tokenSource.Token);
-
-			var thread = new Thread(ServerTests.server.Listen);
-			thread.Start();
 		}
 
-		[AssemblyCleanup]
-		public static void Cleanup()
+		[Fact]
+		public async Task ServerCanHandleGetRequest()
 		{
-			ServerTests.tokenSource?.Cancel();
-
-			ServerTests.server?.Dispose();
-		}
-
-		[TestMethod]
-		public async Task ServerCanAddAndRemoveHandlersAsync()
-		{
-			Assert.IsNotNull(ServerTests.server);
-
-			var handler = new RequestHandler("/temp"u8, TempHandler);
-
-			ServerTests.server.AddRequestHandler(in handler);
-
-			var response = await ServerTests.httpClient.GetAsync("/temp").ConfigureAwait(false);
-
-			Assert.IsTrue(response.StatusCode == HttpStatusCode.OK);
-
-			response.Dispose();
-
-			Assert.IsTrue(ServerTests.server.RemoveRequestHandler(in handler));
-
-			response = await ServerTests.httpClient.GetAsync("/temp").ConfigureAwait(false);
-
-			Assert.IsTrue(response.StatusCode == HttpStatusCode.NotFound);
-
-			response.Dispose();
-
-			return;
-
-			static void TempHandler(in Request request, ref ResponseBuilder builder) =>
-				builder.AppendHeaders(in request, in StatusCodes.Status200OK, default);
-		}
-
-		[TestMethod]
-		public async Task ServerCanReturn404NotFoundAsync()
-		{
-			try
+			using (var request = new HttpRequestMessage(HttpMethod.Get, "/"))
+			using (var response = await this.HttpClient.SendAsync(request))
 			{
-				var response = await ServerTests.httpClient.GetAsync("/").ConfigureAwait(false);
+				Assert.True(response.IsSuccessStatusCode);
 
-				Assert.IsTrue(response.StatusCode == HttpStatusCode.NotFound);
+				Assert.Equal("xenia-test-server", response.Headers.Server.ToString());
+				Assert.Equal("text/html", response.Content.Headers.ContentType?.ToString());
 
-				response.Dispose();
-			}
-			catch (HttpRequestException ex)
-			{
-				Assert.IsTrue(ex.StatusCode == HttpStatusCode.NotFound);
+				var content = await response.Content.ReadAsStringAsync();
+
+				Assert.Equal("<html><body><h1>Hello world!</h1></body></html>", content);
 			}
 		}
 
-		[TestMethod]
-		public async Task ServerCanReturn405MethodNotAllowedAsync()
+		[Fact]
+		public async Task ServerCanHandlePostRequest()
 		{
-			try
-			{
-				var response = await ServerTests.httpClient.GetAsync("/post").ConfigureAwait(false);
+			const string requestContent = "<h1>Hello world!</h1>";
 
-				Assert.IsTrue(response.StatusCode == HttpStatusCode.MethodNotAllowed);
-
-				response.Dispose();
-			}
-			catch (HttpRequestException ex)
+			using (var request = new HttpRequestMessage(HttpMethod.Post, "/"))
 			{
-				Assert.IsTrue(ex.StatusCode == HttpStatusCode.MethodNotAllowed);
+				request.Content = new StringContent(requestContent, System.Text.Encoding.UTF8, "text/html");
+
+				using (var response = await this.HttpClient.SendAsync(request))
+				{
+					Assert.True(response.IsSuccessStatusCode);
+
+					Assert.Equal("xenia-test-server", response.Headers.Server.ToString());
+					Assert.Equal("text/html", response.Content.Headers.ContentType?.ToString());
+
+					var content = await response.Content.ReadAsStringAsync();
+
+					Assert.Equal(requestContent, content);
+				}
 			}
 		}
 
-		[TestMethod]
-		public async Task ServerCanResizeResponseBufferAsync()
+		protected override IResponse RequestHandler(in Request request)
 		{
-			var response = await ServerTests.httpClient.GetAsync("/resize").ConfigureAwait(false);
+			if (System.MemoryExtensions.SequenceEqual(request.Method, "POST"u8))
+			{
+				return new PostResponse(request.Body);
+			}
 
-			// no need to validate the response body if the status code and content type are correct
-			// server would've crashed before it could write the response if the response was too big
-
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/json");
-
-			response.Dispose();
+			return new GetResponse();
 		}
 
-		[TestMethod]
-		public async Task ServerCanServeStaticFilesAsync()
+		private readonly struct GetResponse : IResponse
 		{
-			var response = await ServerTests.httpClient.GetAsync("/_static/style.css").ConfigureAwait(false);
+			public void Send(Socket client, in Request _)
+			{
+				var response = """
+							   HTTP/1.1 200 OK
+							   Content-Type: text/html
+							   Server: xenia-test-server
 
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/css");
+							   <html><body><h1>Hello world!</h1></body></html>
+							   """u8;
 
-			response.Dispose();
+				client.Send(response);
+			}
+		}
 
-			response = await ServerTests.httpClient.GetAsync("/_static/js/main.js").ConfigureAwait(false);
+		private readonly struct PostResponse : IResponse, System.IDisposable
+		{
+			private readonly RentedArray<byte> body;
 
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "application/javascript");
+			public PostResponse(scoped System.ReadOnlySpan<byte> body)
+			{
+				this.body = new RentedArray<byte>(body.Length);
 
-			response.Dispose();
+				var copied = body.TryCopyTo(this.body);
 
-			response = await ServerTests.httpClient.GetAsync("/file.txt").ConfigureAwait(false);
+				Debug.Assert(copied);
+			}
 
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/plain");
+			public void Send(Socket client, in Request _)
+			{
+				var response = """
+							   HTTP/1.1 200 OK
+							   Content-Type: text/html
+							   Server: xenia-test-server
 
-			response.Dispose();
 
-			response = await ServerTests.httpClient.GetAsync("/nested/nested_file.txt").ConfigureAwait(false);
+							   """u8;
 
-			TestHelpers.AssertResponse(response, HttpStatusCode.OK, "text/plain");
+				client.Send(response);
+				client.Send(this.body.Span);
+			}
 
-			response.Dispose();
+			public void Dispose() =>
+				this.body.Dispose();
 		}
 	}
 }

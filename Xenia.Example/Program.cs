@@ -1,126 +1,69 @@
-﻿using System.Text;
-using System.Threading;
-using Byrone.Xenia.Data;
-using Byrone.Xenia.Extensions;
-using Byrone.Xenia.Helpers;
+﻿using System.Threading;
+using Byrone.Xenia;
+using Byrone.Xenia.Example;
+using Byrone.Xenia.Utilities;
 
-namespace Byrone.Xenia.Example
+var config = new Config(IPv4.Local, 6969)
 {
-	internal static class Program
+	Logger = new ConsoleLogger(),
+};
+
+var server = new Server(config, RequestHandler);
+
+var thread = new Thread(server.Run)
+{
+	IsBackground = true,
+	Name = "Xenia Server Thread",
+};
+thread.Start();
+
+while (true)
+{
+	if (System.Console.ReadKey(true).Key == System.ConsoleKey.C)
 	{
-		public static void Main(string[] args)
-		{
-			var cancelTokenSource = new CancellationTokenSource();
-
-			var options = new ServerOptions("0.0.0.0", 6969, new ConsoleLogger())
-			{
-				StaticFiles = new StaticFileDirectory[] { new("_static") },
-			};
-
-			var server = new Server(options, cancelTokenSource.Token);
-
-			server.AddRazorPage<Test>("/"u8);
-			server.AddRazorPage<Test>("/test"u8);
-			server.AddRazorPage<Test>("/posts2/{post}"u8);
-
-			server.AddRequestHandler(new RequestHandler("/html"u8, Program.RawHtmlHandler));
-			server.AddRequestHandler(new RequestHandler("/posts/{post}"u8, Program.RouteParametersHandler));
-			server.AddRequestHandler(new RequestHandler("/json"u8, Program.JsonHandler));
-			server.AddRequestHandler(new RequestHandler(HttpMethod.Post, "/post"u8, Program.PostHandler));
-			server.AddRequestHandler(new RequestHandler("/resize"u8, Program.ResizeHandler));
-
-			var thread = new Thread(server.Listen);
-
-			thread.Start();
-		}
-
-		private static void RawHtmlHandler(in Request request, ref ResponseBuilder response)
-		{
-			var html = $"<html><body><h1>Hello from {request.Path}!</h1></html></body>";
-
-			response.AppendHtml(in request, in StatusCodes.Status200OK, html);
-		}
-
-		private static void RouteParametersHandler(in Request request, ref ResponseBuilder response)
-		{
-			var html = "<html><body><ul>";
-
-			foreach (var parameter in request.RouteParameters)
-			{
-				html += $"<li>{parameter.Key}: {parameter.Value}</li>";
-			}
-
-			html += "</ul></html></body>";
-
-			response.AppendHtml(in request, in StatusCodes.Status200OK, html);
-		}
-
-		private static void JsonHandler(in Request request, ref ResponseBuilder response)
-		{
-			var json = "{\"test\": \"Hello there!\", \"number\": 69}";
-
-			var jsonSize = Encoding.UTF8.GetByteCount(json);
-
-			response.AppendHeaders(in request, in StatusCodes.Status200OK, ContentTypes.Json);
-
-			var span = response.Take(jsonSize);
-
-			var written = Encoding.UTF8.GetBytes(json, span);
-
-			response.Move(written);
-		}
-
-		private static void PostHandler(in Request request, ref ResponseBuilder builder)
-		{
-			if (MultipartFormData.TryParse(in request, out var data, out var count))
-			{
-				for (var i = 0; i < count; i++)
-				{
-					var item = data[i];
-
-					System.Console.WriteLine(item.Name + ": " + item.Content);
-				}
-
-				data.Dispose();
-
-				builder.AppendHeaders(in request, in StatusCodes.Status204NoContent, default);
-				return;
-			}
-
-			if (Json.TryParse(in request, out Person body))
-			{
-				builder.AppendJson(in request, in StatusCodes.Status200OK, body);
-				return;
-			}
-
-			builder.AppendHeaders(in request, in StatusCodes.Status500InternalServerError, default);
-		}
-
-		private static void ResizeHandler(in Request request, ref ResponseBuilder builder)
-		{
-			const int size = 10000;
-
-			builder.AppendHeaders(in request, in StatusCodes.Status200OK, ContentTypes.Json);
-
-			builder.Append('[');
-
-			for (var i = 0; i < size; i++)
-			{
-				var person = new Person
-				{
-					Name = "Person " + i,
-					Age = i,
-				};
-
-				builder.Append(person);
-
-				if (i < size - 1)
-				{
-					builder.Append(',');
-				}
-			}
-
-			builder.Append(']');
-		}
+		break;
 	}
+}
+
+// It's important to clean up and release your resources in this exact order:
+// 1. Dispose the server. This will stop the server from accepting new clients.
+// 2. 'Join' the thread (terminate the background thread).
+// Joining a thread is a blocking call, and not disposing the server before joining the thread...
+// ...will result in the thread waiting for a new client, and THEN stopping the thread.
+
+server.Dispose();
+
+thread.Join();
+
+return;
+
+static IResponse RequestHandler(in Request request)
+{
+	var multipart = Multipart.FromRequest(in request);
+
+	if (multipart.IsValid)
+	{
+		var a = multipart.TryGet("username"u8, out var username);
+		var b = multipart.TryGet("password"u8, out var password);
+		var c = multipart.TryGet("file"u8, out var file);
+
+		username.Dispose();
+		password.Dispose();
+		file.Dispose();
+	}
+
+	var routes = new RouteCollection([
+		"/"u8,
+		"/blog"u8,
+		"/blog/{post}"u8,
+	]);
+
+	if (routes.TryFind(request.Path, out var pattern))
+	{
+		var @params = new RouteParameters(pattern, request.Path);
+		var post = @params.Get("post"u8);    // Will return: my-first-post
+		var id = @params.Get<int>("post"u8); // You can also parse this value to value type
+	}
+
+	return new Response();
 }
