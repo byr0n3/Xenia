@@ -3,7 +3,7 @@ name: Publish packages
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   publish:
@@ -20,7 +20,7 @@ jobs:
         with:
           dotnet-version: 9.0.x
       - name: Set VERSION variable
-        run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\/}" >> $GITHUB_ENV
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
